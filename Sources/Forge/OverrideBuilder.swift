@@ -13,6 +13,6 @@ public struct OverrideBuilder: Sendable {
     ///   - key: Must exactly match the computed property name on the container.
     ///   - factory: A closure that produces the override value.
     public mutating func override<T>(_ key: String, with factory: @escaping @Sendable () -> T) {
-        factories[key] = { factory() as Any }
+        factories[key] = factory
     }
 }

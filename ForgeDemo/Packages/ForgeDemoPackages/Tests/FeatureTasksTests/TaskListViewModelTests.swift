@@ -8,6 +8,9 @@ struct TaskListViewModelTests {
     @Test("loadTasks populates task list")
     @MainActor
     func loadTasksPopulates() async {
+        let previous = TaskContainer.shared
+        defer { TaskContainer.shared = previous }
+
         let container = TaskContainer()
         TaskContainer.shared = container
 
@@ -26,6 +29,9 @@ struct TaskListViewModelTests {
     @Test("refreshTasks updates task list")
     @MainActor
     func refreshTasksUpdates() async {
+        let previous = TaskContainer.shared
+        defer { TaskContainer.shared = previous }
+
         let container = TaskContainer()
         TaskContainer.shared = container
 
@@ -50,6 +56,9 @@ struct TaskListViewModelTests {
     @Test("toggleTask updates badge count")
     @MainActor
     func toggleTaskUpdatesBadge() async {
+        let previous = TaskContainer.shared
+        defer { TaskContainer.shared = previous }
+
         let container = TaskContainer()
         TaskContainer.shared = container
 
@@ -68,6 +77,9 @@ struct TaskListViewModelTests {
     @Test("refreshTasks surfaces network error")
     @MainActor
     func refreshTasksSurfacesError() async {
+        let previous = TaskContainer.shared
+        defer { TaskContainer.shared = previous }
+
         let container = TaskContainer()
         TaskContainer.shared = container
 

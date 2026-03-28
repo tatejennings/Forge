@@ -73,6 +73,7 @@ public final class TaskListViewModel {
         }
     }
 
+    @MainActor
     private func syncBadgeCount() {
         appState.incompletedTaskCount = tasks.filter { !$0.isCompleted }.count
     }

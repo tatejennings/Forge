@@ -7,6 +7,8 @@ struct SettingsViewModelTests {
 
     @Test("saveSettings updates AppState")
     func saveSettingsUpdatesAppState() {
+        let previous = SettingsContainer.shared
+        defer { SettingsContainer.shared = previous }
         let container = SettingsContainer()
         SettingsContainer.shared = container
 
@@ -27,6 +29,8 @@ struct SettingsViewModelTests {
     @Test("clearCompleted sets errorMessage on failure")
     @MainActor
     func clearCompletedSetsError() async {
+        let previous = SettingsContainer.shared
+        defer { SettingsContainer.shared = previous }
         let container = SettingsContainer()
         SettingsContainer.shared = container
 

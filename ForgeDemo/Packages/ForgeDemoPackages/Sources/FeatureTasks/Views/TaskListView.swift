@@ -3,7 +3,7 @@ import CoreModels
 
 public struct TaskListView: View {
     @State private var viewModel = TaskContainer.shared.taskListViewModel
-    private var appState: any AppStateProtocol { TaskContainer.shared.appState }
+    @State private var appState = TaskContainer.shared.appState
 
     @State private var showingAddTask = false
 

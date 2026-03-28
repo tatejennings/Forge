@@ -8,6 +8,8 @@ struct AddTaskViewModelTests {
     @Test("Submit with valid title returns task")
     @MainActor
     func submitValidTitle() async {
+        let previous = TaskContainer.shared
+        defer { TaskContainer.shared = previous }
         let container = TaskContainer()
         TaskContainer.shared = container
 
@@ -25,6 +27,8 @@ struct AddTaskViewModelTests {
     @Test("Submit with empty title returns nil")
     @MainActor
     func submitEmptyTitle() async {
+        let previous = TaskContainer.shared
+        defer { TaskContainer.shared = previous }
         let container = TaskContainer()
         TaskContainer.shared = container
 

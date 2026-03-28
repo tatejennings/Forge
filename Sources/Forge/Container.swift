@@ -181,10 +181,7 @@ open class Container: @unchecked Sendable {
     ///   - factory: A closure that produces the override value.
     public func override<T>(_ key: String, with factory: @escaping @Sendable () -> T) {
         lock.withLock {
-            // Wrap the factory to return the concrete value directly as Any,
-            // avoiding double-existential boxing when T is an existential type
-            // (e.g. `any AppStateProtocol`).
-            overrides[key] = { factory() as Any }
+            overrides[key] = factory
             #if DEBUG
             registeredOverrideKeys.insert(key)
             #endif
