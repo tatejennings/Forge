@@ -50,9 +50,9 @@ public final class TaskListViewModel {
     }
 
     @MainActor
-    public func completeTask(id: UUID) async {
+    public func toggleTask(id: UUID) async {
         do {
-            let updated = try await taskService.completeTask(id: id)
+            let updated = try await taskService.toggleTask(id: id)
             if let index = tasks.firstIndex(where: { $0.id == updated.id }) {
                 tasks[index] = updated
             }

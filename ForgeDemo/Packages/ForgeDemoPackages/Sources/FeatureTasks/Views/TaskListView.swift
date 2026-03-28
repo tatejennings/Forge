@@ -63,7 +63,7 @@ public struct TaskListView: View {
                 ForEach(viewModel.filteredTasks) { task in
                     NavigationLink(value: task) {
                         TaskRowView(task: task) {
-                            Task { await viewModel.completeTask(id: task.id) }
+                            Task { await viewModel.toggleTask(id: task.id) }
                         }
                     }
                 }

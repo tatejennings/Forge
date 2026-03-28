@@ -29,12 +29,12 @@ public final class MockTaskService: TaskServiceProtocol, @unchecked Sendable {
         return task
     }
 
-    public func completeTask(id: UUID) async throws -> TaskItem {
+    public func toggleTask(id: UUID) async throws -> TaskItem {
         guard let index = stubbedTasks.firstIndex(where: { $0.id == id }) else {
             throw MockError.notFound
         }
-        stubbedTasks[index].isCompleted = true
-        stubbedTasks[index].completedAt = Date()
+        stubbedTasks[index].isCompleted.toggle()
+        stubbedTasks[index].completedAt = stubbedTasks[index].isCompleted ? Date() : nil
         return stubbedTasks[index]
     }
 

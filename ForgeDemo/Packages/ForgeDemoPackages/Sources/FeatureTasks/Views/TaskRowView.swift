@@ -3,12 +3,12 @@ import CoreModels
 
 struct TaskRowView: View {
     let task: TaskItem
-    var onComplete: () -> Void
+    var onToggle: () -> Void
 
     var body: some View {
         HStack {
             Button {
-                if !task.isCompleted { onComplete() }
+                onToggle()
             } label: {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(task.isCompleted ? .green : .secondary)

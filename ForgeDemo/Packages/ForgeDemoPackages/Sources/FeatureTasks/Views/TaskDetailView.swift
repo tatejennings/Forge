@@ -19,13 +19,14 @@ public struct TaskDetailView: View {
                 }
             }
             Section("Status") {
-                if viewModel.task.isCompleted {
-                    Label("Completed", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                } else {
-                    Button("Mark Complete") {
-                        Task { await viewModel.complete() }
-                    }
+                Button {
+                    Task { await viewModel.toggle() }
+                } label: {
+                    Label(
+                        viewModel.task.isCompleted ? "Completed" : "Not Completed",
+                        systemImage: viewModel.task.isCompleted ? "checkmark.circle.fill" : "circle"
+                    )
+                    .foregroundStyle(viewModel.task.isCompleted ? .green : .primary)
                 }
             }
         }

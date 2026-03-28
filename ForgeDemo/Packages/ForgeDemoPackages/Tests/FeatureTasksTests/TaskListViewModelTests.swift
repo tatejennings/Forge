@@ -47,9 +47,9 @@ struct TaskListViewModelTests {
         #expect(mockState.isSyncing == false)
     }
 
-    @Test("completeTask updates badge count")
+    @Test("toggleTask updates badge count")
     @MainActor
-    func completeTaskUpdatesBadge() async {
+    func toggleTaskUpdatesBadge() async {
         let container = TaskContainer()
         TaskContainer.shared = container
 
@@ -61,7 +61,7 @@ struct TaskListViewModelTests {
 
         let vm = TaskListViewModel()
         await vm.loadTasks()
-        await vm.completeTask(id: tasks[0].id)
+        await vm.toggleTask(id: tasks[0].id)
         #expect(mockState.incompletedTaskCount == 0)
     }
 

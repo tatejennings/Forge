@@ -38,13 +38,13 @@ public final class TaskService: TaskServiceProtocol, Sendable {
         return task
     }
 
-    public func completeTask(id: UUID) async throws -> TaskItem {
+    public func toggleTask(id: UUID) async throws -> TaskItem {
         var tasks = try await repository.fetchAll()
         guard let index = tasks.firstIndex(where: { $0.id == id }) else {
             throw TaskError.notFound
         }
-        tasks[index].isCompleted = true
-        tasks[index].completedAt = Date()
+        tasks[index].isCompleted.toggle()
+        tasks[index].completedAt = tasks[index].isCompleted ? Date() : nil
         try await repository.update(tasks[index])
         return tasks[index]
     }
