@@ -1,4 +1,4 @@
-![Swift](https://img.shields.io/badge/Swift-6.2-F05138.svg?style=flat&logo=swift&logoColor=white)
+![Swift](https://img.shields.io/badge/Swift-6.2%20%7C%206.1%20%7C%206.0%20%7C%205.10-F05138.svg?style=flat&logo=swift&logoColor=white)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20visionOS-4A90D9.svg?style=flat)
 ![SPM](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg?style=flat)
 
@@ -276,7 +276,7 @@ var authService: AuthService {
 
 | Requirement | Minimum |
 |-------------|---------|
-| Swift | 6.2 |
+| Swift | 5.10 |
 | iOS | 16.0 |
 | macOS | 13.0 |
 | tvOS | 16.0 |
