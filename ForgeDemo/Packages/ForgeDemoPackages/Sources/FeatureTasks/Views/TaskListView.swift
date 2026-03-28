@@ -37,6 +37,7 @@ public struct TaskListView: View {
                 }
             }
             .task {
+                guard viewModel.tasks.isEmpty else { return }
                 await viewModel.loadTasks()
             }
             .refreshable {
@@ -61,7 +62,11 @@ public struct TaskListView: View {
                 .listRowBackground(Color.clear)
             } else {
                 ForEach(viewModel.filteredTasks) { task in
-                    NavigationLink(value: task) {
+                    NavigationLink {
+                        TaskDetailView(task: task) { updated in
+                            viewModel.updateTask(updated)
+                        }
+                    } label: {
                         TaskRowView(task: task) {
                             Task { await viewModel.toggleTask(id: task.id) }
                         }
@@ -74,9 +79,6 @@ public struct TaskListView: View {
                     }
                 }
             }
-        }
-        .navigationDestination(for: TaskItem.self) { task in
-            TaskDetailView(task: task)
         }
     }
 

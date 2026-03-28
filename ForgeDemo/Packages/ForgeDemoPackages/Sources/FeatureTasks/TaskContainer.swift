@@ -27,11 +27,9 @@ public final class TaskContainer: Container, SharedContainer, @unchecked Sendabl
     }
 
     // MARK: - Feature-owned dependencies
-
+    
     public var taskListViewModel: TaskListViewModel {
-        provide(.cached,
-                preview: { TaskListViewModel() }
-        ) {
+        provide(.cached, preview: { TaskListViewModel() }) {
             TaskListViewModel()
         }
     }
@@ -40,7 +38,4 @@ public final class TaskContainer: Container, SharedContainer, @unchecked Sendabl
         provide { AddTaskViewModel() }
     }
 
-    public func taskDetailViewModel(for task: TaskItem) -> TaskDetailViewModel {
-        TaskDetailViewModel(task: task)
-    }
 }

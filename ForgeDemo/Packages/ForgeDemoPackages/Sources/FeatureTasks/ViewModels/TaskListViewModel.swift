@@ -73,6 +73,15 @@ public final class TaskListViewModel {
         }
     }
 
+    /// Updates a task in the local list (called by detail view callback).
+    @MainActor
+    public func updateTask(_ task: TaskItem) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index] = task
+        }
+        syncBadgeCount()
+    }
+
     @MainActor
     private func syncBadgeCount() {
         appState.incompletedTaskCount = tasks.filter { !$0.isCompleted }.count

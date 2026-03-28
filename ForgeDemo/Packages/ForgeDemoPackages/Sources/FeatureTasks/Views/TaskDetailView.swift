@@ -2,31 +2,48 @@ import SwiftUI
 import CoreModels
 
 public struct TaskDetailView: View {
-    @State private var viewModel: TaskDetailViewModel
+    let task: TaskItem
+    var onTaskUpdated: ((TaskItem) -> Void)?
 
-    public init(task: TaskItem) {
-        self._viewModel = State(initialValue: TaskContainer.shared.taskDetailViewModel(for: task))
+    @State private var currentTask: TaskItem
+    @State private var isToggling = false
+    @State private var errorMessage: String?
+
+    private var taskService: any TaskServiceProtocol {
+        TaskContainer.shared.taskService
+    }
+
+    public init(task: TaskItem, onTaskUpdated: ((TaskItem) -> Void)? = nil) {
+        self.task = task
+        self.onTaskUpdated = onTaskUpdated
+        self._currentTask = State(initialValue: task)
     }
 
     public var body: some View {
         Form {
             Section("Title") {
-                Text(viewModel.task.title)
+                Text(currentTask.title)
             }
-            if !viewModel.task.notes.isEmpty {
+            if !currentTask.notes.isEmpty {
                 Section("Notes") {
-                    Text(viewModel.task.notes)
+                    Text(currentTask.notes)
                 }
             }
             Section("Status") {
                 Button {
-                    Task { await viewModel.toggle() }
+                    Task { await toggle() }
                 } label: {
                     Label(
-                        viewModel.task.isCompleted ? "Completed" : "Not Completed",
-                        systemImage: viewModel.task.isCompleted ? "checkmark.circle.fill" : "circle"
+                        currentTask.isCompleted ? "Completed" : "Not Completed",
+                        systemImage: currentTask.isCompleted ? "checkmark.circle.fill" : "circle"
                     )
-                    .foregroundStyle(viewModel.task.isCompleted ? .green : .primary)
+                    .foregroundStyle(currentTask.isCompleted ? .green : .primary)
+                }
+                .disabled(isToggling)
+            }
+            if let error = errorMessage {
+                Section {
+                    Text(error).foregroundStyle(.red)
                 }
             }
         }
@@ -34,6 +51,19 @@ public struct TaskDetailView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+
+    @MainActor
+    private func toggle() async {
+        isToggling = true
+        defer { isToggling = false }
+        do {
+            let updated = try await taskService.toggleTask(id: currentTask.id)
+            currentTask = updated
+            onTaskUpdated?(updated)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }
 
