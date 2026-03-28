@@ -36,6 +36,7 @@
 		5DEA75EE2F772A53003946FE /* ForgeDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForgeDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA75FD2F772A54003946FE /* ForgeDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA76072F772A55003946FE /* ForgeDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5DECF8722F77BF070005ED3D /* ForgeDemoPackages */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = ForgeDemoPackages; path = Packages/ForgeDemoPackages; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -91,6 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				5DEA75F02F772A53003946FE /* ForgeDemo */,
+				5DECF8722F77BF070005ED3D /* ForgeDemoPackages */,
 				5DEA76002F772A54003946FE /* ForgeDemoTests */,
 				5DEA760A2F772A55003946FE /* ForgeDemoUITests */,
 				5DEA75EF2F772A53003946FE /* Products */,
@@ -217,7 +219,6 @@
 			mainGroup = 5DEA75E52F772A53003946FE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				5DEA76212F774DEB003946FE /* XCLocalSwiftPackageReference "Packages/ForgeDemoPackages" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5DEA75EF2F772A53003946FE /* Products */;
@@ -594,13 +595,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		5DEA76212F774DEB003946FE /* XCLocalSwiftPackageReference "Packages/ForgeDemoPackages" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/ForgeDemoPackages;
-		};
-/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		5DEA761B2F772AB1003946FE /* Forge */ = {
