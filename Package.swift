@@ -16,16 +16,16 @@ let package = Package(
             targets: ["Forge"]
         ),
     ],
-    dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
-    ],
     targets: [
         .target(
-            name: "Forge"
+            name: "Forge",
+            path: "Sources/Forge",
+            exclude: ["Forge.docc"]
         ),
         .testTarget(
             name: "ForgeTests",
-            dependencies: ["Forge"]
+            dependencies: ["Forge"],
+            path: "Tests/ForgeTests"
         ),
     ]
 )
