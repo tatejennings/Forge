@@ -1,6 +1,7 @@
 ![Swift](https://img.shields.io/badge/Swift-6.2%20%7C%206.1%20%7C%206.0%20%7C%205.10-F05138.svg?style=flat&logo=swift&logoColor=white)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20visionOS-4A90D9.svg?style=flat)
 ![SPM](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg?style=flat)
+[![Documentation](https://img.shields.io/badge/DocC-Documentation-blue.svg?style=flat)](https://tatejennings.github.io/forge/documentation/forge)
 
 ![Forge](.github/forge_logo.png)
 
@@ -23,6 +24,8 @@ Most DI frameworks in Swift are either too heavy (requiring code generation and 
 ---
 
 ## Installation
+
+> For a complete walkthrough including your first container and injection, see the [Getting Started](https://tatejennings.github.io/forge/documentation/forge/gettingstarted) guide.
 
 Add Forge to your project via Swift Package Manager:
 
@@ -62,7 +65,7 @@ final class AppContainer: Container, SharedContainer {
 }
 ```
 
-The `typealias` gives you the clean `@Inject(\.property)` syntax throughout your module.
+The `typealias` gives you the clean `@Inject(\.property)` syntax throughout your module. See [`ContainerInject`](https://tatejennings.github.io/forge/documentation/forge/containerinject) for details on how lazy resolution works.
 
 ### 2. Inject Dependencies
 
@@ -86,7 +89,7 @@ That's it. No registration ceremony, no service locator, no runtime errors.
 
 ## Scopes
 
-Forge supports three lifecycle scopes:
+Forge supports three lifecycle [scopes](https://tatejennings.github.io/forge/documentation/forge/scope):
 
 ```swift
 // New instance every time (default)
@@ -115,6 +118,8 @@ var viewModel: TaskListViewModel {
 
 ## Xcode Preview Support
 
+> Full guide: [Xcode Preview Support](https://tatejennings.github.io/forge/documentation/forge/xcodepreviewsupport) — detection, caching behavior, and multiple preview variants.
+
 Add a `preview:` factory to any dependency. When running in an Xcode Preview, Forge automatically uses the preview factory instead — no conditional compilation needed:
 
 ```swift
@@ -130,6 +135,8 @@ Every `#Preview` block will use the mock automatically. No setup required.
 ---
 
 ## Testing
+
+> Full guide: [Testing with Forge](https://tatejennings.github.io/forge/documentation/forge/testingwithforge) — scoped overrides, container swap, `unimplemented`, and best practices.
 
 Use `withOverrides` to swap dependencies for the duration of a test. Cleanup is automatic — overrides are restored when the closure exits, even if it throws:
 
@@ -175,6 +182,8 @@ If `authService` is accidentally called without being overridden, the app crashe
 
 ## Cross-Module Dependencies
 
+> Full guide: [Modular Architecture](https://tatejennings.github.io/forge/documentation/forge/modulararchitecture) — per-module containers, cross-module proxying, and the composition root pattern.
+
 Feature modules should never import other feature modules directly. Instead, declare the dependency in your container with a safe default, and let the app target wire the real implementation at launch:
 
 ```swift
@@ -209,6 +218,8 @@ This keeps feature modules fully independent and testable in isolation.
 
 ## Best Practices
 
+> See [SOLID Principles with Forge](https://tatejennings.github.io/forge/documentation/forge/solidprinciples) for the full rationale behind each practice.
+
 **Always use protocol return types** on container properties. This is what makes mock substitution work:
 
 ```swift
@@ -233,25 +244,27 @@ var authService: AuthService {
 
 ## API Reference
 
+> Browse the full [API documentation](https://tatejennings.github.io/forge/documentation/forge) on GitHub Pages.
+
 | Type | Purpose |
 |------|---------|
-| `Container` | Base class for dependency containers. Subclass and add computed properties. |
-| `SharedContainer` | Protocol that adds a `static var shared` for convenient `@Inject` syntax. |
-| `ContainerInject` | Property wrapper for lazy dependency injection. Aliased as `@Inject` per module. |
-| `Scope` | Enum: `.transient`, `.singleton`, `.cached` |
-| `OverrideBuilder` | Accumulates overrides for `withOverrides` closures. |
-| `unimplemented(_:)` | Returns a value that `fatalError`s if ever called. For explicit test contracts. |
+| [`Container`](https://tatejennings.github.io/forge/documentation/forge/container) | Base class for dependency containers. Subclass and add computed properties. |
+| [`SharedContainer`](https://tatejennings.github.io/forge/documentation/forge/sharedcontainer) | Protocol that adds a `static var shared` for convenient `@Inject` syntax. |
+| [`ContainerInject`](https://tatejennings.github.io/forge/documentation/forge/containerinject) | Property wrapper for lazy dependency injection. Aliased as `@Inject` per module. |
+| [`Scope`](https://tatejennings.github.io/forge/documentation/forge/scope) | Enum: `.transient`, `.singleton`, `.cached` |
+| [`OverrideBuilder`](https://tatejennings.github.io/forge/documentation/forge/overridebuilder) | Accumulates overrides for `withOverrides` closures. |
+| [`unimplemented(_:)`](https://tatejennings.github.io/forge/documentation/forge/unimplemented(_:file:line:)) | Returns a value that `fatalError`s if ever called. For explicit test contracts. |
 
 ### Container Methods
 
 | Method | Description |
 |--------|-------------|
-| `provide(_:preview:key:_:)` | Register and resolve a dependency with scope and optional preview factory. |
-| `withOverrides(_:run:)` | Apply overrides for the duration of a closure (sync and async variants). |
-| `override(_:with:)` | Register a replacement factory for a key. |
-| `removeOverride(for:)` | Remove a single override. |
-| `resetAll()` | Remove all overrides and clear all cached/singleton values. |
-| `resetCached()` | Clear cached-scope values only. Singletons and overrides are preserved. |
+| [`provide(_:preview:key:_:)`](https://tatejennings.github.io/forge/documentation/forge/container/provide(_:preview:key:_:)) | Register and resolve a dependency with scope and optional preview factory. |
+| [`withOverrides(_:run:)`](https://tatejennings.github.io/forge/documentation/forge/container) | Apply overrides for the duration of a closure (sync and async variants). |
+| [`override(_:with:)`](https://tatejennings.github.io/forge/documentation/forge/container/override(_:with:)) | Register a replacement factory for a key. |
+| [`removeOverride(for:)`](https://tatejennings.github.io/forge/documentation/forge/container/removeoverride(for:)) | Remove a single override. |
+| [`resetAll()`](https://tatejennings.github.io/forge/documentation/forge/container/resetall()) | Remove all overrides and clear all cached/singleton values. |
+| [`resetCached()`](https://tatejennings.github.io/forge/documentation/forge/container/resetcached()) | Clear cached-scope values only. Singletons and overrides are preserved. |
 
 ---
 
