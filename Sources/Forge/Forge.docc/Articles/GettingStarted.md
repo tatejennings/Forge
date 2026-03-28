@@ -5,8 +5,12 @@ Install Forge and register your first dependencies.
 ## Overview
 
 Forge is a lightweight dependency injection framework for Swift. This guide walks you
-through installation, creating your first container, and injecting dependencies into
-your code.
+through installation and registering your first dependencies. Forge offers two paths:
+
+- **Simple Setup** — extend the built-in ``AppContainer`` and use ``Inject`` immediately.
+  Best for single-target apps and getting started quickly.
+- **Modular Setup** — create your own container per module with a local typealias.
+  Best for multi-module SPM architectures.
 
 ## Installation
 
@@ -27,23 +31,53 @@ Then add `Forge` to your target's dependencies:
 Or add it via Xcode: **File > Add Packages**, enter the repository URL, and add
 `Forge` to your target.
 
-## Define a Container
+## Simple Setup
 
-Create a container by subclassing ``Container`` and conforming to ``SharedContainer``.
-Register dependencies as computed properties that call ``Container/provide(_:preview:key:_:)``:
+Extend the built-in ``AppContainer`` with your dependencies. The framework-provided
+``Inject`` typealias lets you inject them anywhere — no container class to write,
+no typealias to define, no setup code at all:
 
 ```swift
 import Forge
 
-// The module-local typealias goes in the container file
-typealias Inject<T> = ContainerInject<AppContainer, T>
-
-final class AppContainer: Container, SharedContainer {
-    static var shared = AppContainer()
-
+extension AppContainer {
     var networkClient: any NetworkClientProtocol {
         provide(.singleton) { URLSessionNetworkClient() }
     }
+
+    var authService: any AuthServiceProtocol {
+        provide(.singleton, preview: { MockAuthService() }) {
+            AuthService(network: self.networkClient)
+        }
+    }
+}
+```
+
+Then inject anywhere:
+
+```swift
+final class LoginViewModel {
+    @ObservationIgnored
+    @Inject(\.authService) private var authService
+}
+```
+
+That's it. No `App.init()`, no manual wiring, no boilerplate.
+
+## Modular Setup
+
+For apps with multiple SPM modules, create a container per module by subclassing
+``Container`` and conforming to ``SharedContainer``. Add a module-local typealias
+to shadow the framework's ``Inject``:
+
+```swift
+import Forge
+
+// The module-local typealias shadows the framework-provided one
+typealias Inject<T> = ContainerInject<AuthContainer, T>
+
+final class AuthContainer: Container, SharedContainer {
+    static var shared = AuthContainer()
 
     var authService: any AuthServiceProtocol {
         provide(.singleton, preview: { MockAuthService() }) {
@@ -59,9 +93,10 @@ final class AppContainer: Container, SharedContainer {
 
 ### The Module-Local Typealias
 
-The `typealias Inject<T> = ContainerInject<AppContainer, T>` line is placed **in the
-container file itself** — not in a separate file. This typealias is the only place
-where your container type name appears at injection call sites, keeping them clean:
+The `typealias Inject<T> = ContainerInject<AuthContainer, T>` line is placed **in the
+container file itself** — not in a separate file. This typealias shadows the framework's
+built-in ``Inject`` within this module, so `@Inject(\.authService)` resolves from
+`AuthContainer` instead of ``AppContainer``:
 
 ```swift
 @Inject(\.authService) private var auth

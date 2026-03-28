@@ -45,15 +45,49 @@ Then add `Forge` to your target's dependencies:
 
 ## Quick Start
 
-### 1. Define a Container
+### Simple Setup (zero config)
+
+Extend Forge's built-in `AppContainer` with your dependencies and inject them immediately — no container class, no typealias, no setup code:
 
 ```swift
 import Forge
 
-typealias Inject<T> = ContainerInject<AppContainer, T>
+// 1. Extend AppContainer with your dependencies
+extension AppContainer {
+    var networkClient: any NetworkClientProtocol {
+        provide(.singleton) { URLSessionNetworkClient() }
+    }
 
-final class AppContainer: Container, SharedContainer {
-    static var shared = AppContainer()
+    var authService: any AuthServiceProtocol {
+        provide(.singleton) { AuthService(network: self.networkClient) }
+    }
+}
+
+// 2. Inject anywhere — that's it
+@Observable
+final class LoginViewModel {
+    @ObservationIgnored
+    @Inject(\.authService) private var authService
+
+    func login(username: String, password: String) async {
+        try? await authService.login(username: username, password: password)
+    }
+}
+```
+
+No `App.init()`. No `Forge.defaultContainer = ...`. No typealias. Just extend and inject.
+
+### Modular Setup (per-module containers)
+
+For multi-module SPM apps, create a container per module and add a local `typealias` that shadows the framework's `Inject`:
+
+```swift
+import Forge
+
+typealias Inject<T> = ContainerInject<AuthContainer, T>
+
+final class AuthContainer: Container, SharedContainer {
+    static var shared = AuthContainer()
 
     var networkClient: any NetworkClientProtocol {
         provide(.singleton) { URLSessionNetworkClient() }
@@ -65,9 +99,9 @@ final class AppContainer: Container, SharedContainer {
 }
 ```
 
-The `typealias` gives you the clean `@Inject(\.property)` syntax throughout your module. See [`ContainerInject`](https://tatejennings.github.io/Forge/documentation/forge/containerinject) for details on how lazy resolution works.
+The `typealias` shadows Forge's built-in `Inject` so `@Inject(\.property)` resolves from your module's container. See [`ContainerInject`](https://tatejennings.github.io/Forge/documentation/forge/containerinject) for details on how lazy resolution works.
 
-### 2. Inject Dependencies
+### Inject Dependencies
 
 ```swift
 @Observable
@@ -169,7 +203,7 @@ AppContainer.shared.resetAll()
 Make test boundaries explicit. Any dependency not overridden in a test will loudly fail if called:
 
 ```swift
-final class TestAppContainer: AppContainer {
+final class TestAuthContainer: AuthContainer {
     override var authService: any AuthServiceProtocol {
         provide { unimplemented("authService") }
     }
@@ -248,6 +282,9 @@ var authService: AuthService {
 
 | Type | Purpose |
 |------|---------|
+| [`AppContainer`](https://tatejennings.github.io/Forge/documentation/forge/appcontainer) | Built-in ready-to-use container. Extend it with your dependencies for zero-config injection. |
+| [`Inject`](https://tatejennings.github.io/Forge/documentation/forge/inject) | Framework-provided typealias for `ContainerInject<AppContainer, T>`. Shadow it in modules with custom containers. |
+| [`Forge`](https://tatejennings.github.io/Forge/documentation/forge/forge-swift.forge) | Namespace enum. Access `Forge.defaultContainer` for programmatic resolution. |
 | [`Container`](https://tatejennings.github.io/Forge/documentation/forge/container) | Base class for dependency containers. Subclass and add computed properties. |
 | [`SharedContainer`](https://tatejennings.github.io/Forge/documentation/forge/sharedcontainer) | Protocol that adds a `static var shared` for convenient `@Inject` syntax. |
 | [`ContainerInject`](https://tatejennings.github.io/Forge/documentation/forge/containerinject) | Property wrapper for lazy dependency injection. Aliased as `@Inject` per module. |

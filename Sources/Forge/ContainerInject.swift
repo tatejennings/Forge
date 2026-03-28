@@ -5,14 +5,31 @@
 /// type's `init` body runs — eager resolution would fail if the container is
 /// configured (via overrides) after the object is created, which is common in tests.
 ///
-/// ## Usage with SharedContainer (preferred)
+/// ## Zero-Config Usage (simplest)
+///
+/// Extend ``AppContainer`` with your dependencies and use the framework-provided
+/// ``Inject`` typealias — no setup required:
+///
+/// ```swift
+/// extension AppContainer {
+///     var authService: any AuthServiceProtocol {
+///         provide(.singleton) { AuthService() }
+///     }
+/// }
+///
+/// class LoginViewModel {
+///     @Inject(\.authService) private var auth
+/// }
+/// ```
+///
+/// ## Modular Usage (per-module container)
 ///
 /// Define a module-local typealias for clean call sites. The container must
 /// conform to ``SharedContainer``:
 ///
 /// ```swift
 /// // In your module's container file:
-/// typealias Inject<T> = ContainerInject<AppContainer, T>
+/// typealias Inject<T> = ContainerInject<FeatureContainer, T>
 ///
 /// // At the call site:
 /// @Inject(\.authService) private var auth
@@ -73,6 +90,29 @@ public struct ContainerInject<C: Container, Value> {
     /// - Parameter keyPath: A key path to the dependency property on the container.
     public init(_ keyPath: KeyPath<C, Value>) where C: SharedContainer {
         self.container = C.shared
+        self.keyPath = keyPath
+    }
+
+    /// Creates an injection wrapper that resolves from ``Forge/defaultContainer``.
+    ///
+    /// This initializer is used when `C` is the base ``Container`` class and no
+    /// specific container type is provided. It resolves from whatever container
+    /// is set as ``Forge/defaultContainer`` — by default, ``AppContainer/shared``.
+    ///
+    /// Triggers a `fatalError` with a descriptive message if
+    /// ``Forge/defaultContainer`` is `nil` at resolution time.
+    ///
+    /// - Parameter keyPath: A key path to the desired dependency on the
+    ///   default container.
+    public init(_ keyPath: KeyPath<Container, Value>) where C == Container {
+        guard let container = Forge.defaultContainer else {
+            fatalError(
+                "Forge: defaultContainer is nil. Either set Forge.defaultContainer, "
+                + "extend AppContainer with your dependencies, or use the typealias "
+                + "pattern: typealias Inject<T> = ContainerInject<YourContainer, T>"
+            )
+        }
+        self.container = container
         self.keyPath = keyPath
     }
 }

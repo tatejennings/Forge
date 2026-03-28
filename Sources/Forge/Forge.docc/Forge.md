@@ -10,20 +10,23 @@ generation, no reflection, no third-party dependencies.
 
 **Key capabilities:**
 
+- **Zero-config setup** — extend the built-in ``AppContainer`` and use ``Inject`` immediately
 - **Scope management** — transient, singleton, and cached lifecycles via ``Scope``
 - **Preview support** — provide mock factories that activate automatically in Xcode Previews
 - **Testing overrides** — swap dependencies in tests with automatic cleanup
 - **Modular architecture** — one container per module with clean cross-module proxying
 
 ```swift
-final class AppContainer: Container, SharedContainer {
-    static var shared = AppContainer()
-
+extension AppContainer {
     var authService: any AuthServiceProtocol {
         provide(.singleton, preview: { MockAuthService() }) {
             AuthService(network: self.networkClient)
         }
     }
+}
+
+class LoginViewModel {
+    @Inject(\.authService) private var authService
 }
 ```
 
@@ -32,11 +35,14 @@ final class AppContainer: Container, SharedContainer {
 ### Essentials
 
 - <doc:GettingStarted>
+- ``AppContainer``
+- ``Forge``
 - ``Container``
 - ``Scope``
 
 ### Injection
 
+- ``Inject``
 - ``ContainerInject``
 - ``SharedContainer``
 
