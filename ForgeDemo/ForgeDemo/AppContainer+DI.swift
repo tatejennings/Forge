@@ -1,4 +1,3 @@
-import Foundation
 import Forge
 import CoreModels
 import CoreNetworking
@@ -52,23 +51,22 @@ extension AppContainer {
             AppStateService()
         }
     }
-}
 
-// MARK: - Container Wiring (Composition Root)
+    // MARK: Composition Root
 
-func wireContainers() {
-    assert(Thread.isMainThread, "wireContainers must be called from the main thread")
-    let app = AppContainer.shared
+    static func wireContainers() {
+        let app = AppContainer.shared
 
-    // Resolve once eagerly, then hand the instances to the @Sendable closures
-    let taskService = app.taskService
-    let appState = app.appState
+        // Resolve once eagerly, then hand the instances to the @Sendable closures
+        let taskService = app.taskService
+        let appState = app.appState
 
-    // Wire TaskContainer with live dependencies from AppContainer
-    TaskContainer.shared.override("taskService") { taskService }
-    TaskContainer.shared.override("appState") { appState }
+        // Wire TaskContainer with live dependencies from AppContainer
+        TaskContainer.shared.override("taskService") { taskService }
+        TaskContainer.shared.override("appState") { appState }
 
-    // Wire SettingsContainer with live dependencies from AppContainer
-    SettingsContainer.shared.override("taskService") { taskService }
-    SettingsContainer.shared.override("appState") { appState }
+        // Wire SettingsContainer with live dependencies from AppContainer
+        SettingsContainer.shared.override("taskService") { taskService }
+        SettingsContainer.shared.override("appState") { appState }
+    }
 }

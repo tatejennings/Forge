@@ -1,10 +1,11 @@
 import SwiftUI
+import Forge
 
 @main
 struct ForgeDemoApp: App {
 
     init() {
-        wireContainers()
+        AppContainer.wireContainers()
     }
 
     var body: some Scene {
