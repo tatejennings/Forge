@@ -194,15 +194,16 @@ If `authService` is accidentally called without being overridden, the test fails
 
 ## Cross-Module Dependencies
 
-Feature modules should never import other feature modules. Proxy dependencies through your own container:
+Feature modules should never import other feature modules directly. Instead, declare the dependency in your container with a safe default, and let the app target wire the real implementation at launch:
 
 ```swift
-// In SearchModule — proxies analytics from CoreModule
+// In SearchModule — depends on analytics, but doesn't import the analytics module
 final class SearchContainer: Container, SharedContainer {
     static var shared = SearchContainer()
 
+    // Wired by the app target at startup via override
     var analytics: any AnalyticsProtocol {
-        provide { CoreAnalyticsContainer.shared.analytics }
+        provide(.singleton) { MockAnalytics() }
     }
 
     var searchService: any SearchServiceProtocol {
@@ -211,12 +212,17 @@ final class SearchContainer: Container, SharedContainer {
 }
 ```
 
-The app target wires the real implementations at launch:
+The app target is the **composition root** — it's the only place that imports both modules and wires them together:
 
 ```swift
 // In your App's init()
-SearchContainer.shared.override("analytics") { CoreContainer.shared.analytics }
+func wireContainers() {
+    let core = CoreContainer.shared
+    SearchContainer.shared.override("analytics") { core.analytics }
+}
 ```
+
+This keeps feature modules fully independent and testable in isolation.
 
 ---
 
