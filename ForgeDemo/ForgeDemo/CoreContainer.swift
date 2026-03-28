@@ -9,18 +9,14 @@ nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Se
     // MARK: - Networking
     
     var httpClient: any HTTPClientProtocol {
-        provide(.singleton,
-                preview: { MockHTTPClient() as any HTTPClientProtocol }
-        ) {
-            URLSessionHTTPClient() as any HTTPClientProtocol
+        provide(.singleton, preview: { MockHTTPClient() }) {
+            URLSessionHTTPClient()
         }
     }
 
     var remoteTaskService: any RemoteTaskServiceProtocol {
-        provide(.singleton,
-                preview: { MockRemoteTaskService() as any RemoteTaskServiceProtocol }
-        ) {
-            RemoteTaskService(httpClient: self.httpClient) as any RemoteTaskServiceProtocol
+        provide(.singleton, preview: { MockRemoteTaskService() }) {
+            RemoteTaskService(httpClient: self.httpClient)
         }
     }
 
@@ -33,27 +29,23 @@ nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Se
     }
 
     var taskRepository: any TaskRepositoryProtocol {
-        provide(.singleton) { TaskRepository(stack: self.swiftDataStack) as any TaskRepositoryProtocol }
+        provide(.singleton) { TaskRepository(stack: self.swiftDataStack) }
     }
 
     // MARK: - Services
 
     var taskService: any TaskServiceProtocol {
-        provide(.singleton,
-                preview: { MockTaskService() as any TaskServiceProtocol }
-        ) {
+        provide(.singleton, preview: { MockTaskService() }) {
             TaskService(
                 repository: self.taskRepository,
                 remoteService: self.remoteTaskService
-            ) as any TaskServiceProtocol
+            )
         }
     }
 
     var appState: any AppStateProtocol {
-        provide(.singleton,
-                preview: { MockAppState(displayName: "Preview User") as any AppStateProtocol }
-        ) {
-            AppStateService() as any AppStateProtocol
+        provide(.singleton, preview: { MockAppState(displayName: "Preview User") }) {
+            AppStateService()
         }
     }
 }

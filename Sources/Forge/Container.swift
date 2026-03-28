@@ -38,8 +38,14 @@ open class Container: @unchecked Sendable {
     /// Resolves a dependency using the given scope and factory.
     ///
     /// Call this from computed properties on your ``Container`` subclass.
-    /// The `key` parameter defaults to `#function`, which automatically matches
-    /// the enclosing property name.
+    /// The generic type `T` is inferred from the computed property's return type,
+    /// so factories can return concrete types without explicit casting:
+    ///
+    /// ```swift
+    /// var authService: any AuthServiceProtocol {
+    ///     provide(.singleton, preview: { MockAuthService() }) { LiveAuthService() }
+    /// }
+    /// ```
     ///
     /// - Parameters:
     ///   - scope: The lifecycle scope for this dependency. Defaults to `.transient`.
@@ -50,9 +56,9 @@ open class Container: @unchecked Sendable {
     /// - Returns: The resolved dependency instance.
     public func provide<T>(
         _ scope: Scope = .transient,
-        preview: (() -> T)? = nil,
+        preview: (() -> Any)? = nil,
         key: String = #function,
-        _ factory: () -> T
+        _ factory: () -> Any
     ) -> T {
         // 1. Check overrides first — overrides are never cached
         if let overrideFactory = lock.withLock({
@@ -72,21 +78,27 @@ open class Container: @unchecked Sendable {
 
         // 2. Preview factory — never cached
         if PreviewContext.isPreview, let preview {
-            return preview()
+            guard let value = preview() as? T else {
+                fatalError("[Forge] Preview factory for '\(key)' returned wrong type. Expected \(T.self).")
+            }
+            return value
         }
 
         // 3. Transient — always create fresh
         if scope == .transient {
-            return factory()
+            guard let value = factory() as? T else {
+                fatalError("[Forge] Factory for '\(key)' returned wrong type. Expected \(T.self).")
+            }
+            return value
         }
 
-        // 4. Singleton / Cached — double-checked locking
+        // 4. Singleton / Cached
         return resolveScoped(scope: scope, key: key, factory: factory)
     }
 
     // MARK: - Scoped Resolution
 
-    private func resolveScoped<T>(scope: Scope, key: String, factory: () -> T) -> T {
+    private func resolveScoped<T>(scope: Scope, key: String, factory: () -> Any) -> T {
         // Note: Swift dictionaries are value types — concurrent read + write is UB.
         // All cache access must be locked. The factory is called inside the lock
         // to prevent duplicate instantiation.
@@ -96,7 +108,10 @@ open class Container: @unchecked Sendable {
                 return value
             }
 
-            let value = factory()
+            let result = factory()
+            guard let value = result as? T else {
+                fatalError("[Forge] Factory for '\(key)' returned \(type(of: result)) but expected \(T.self).")
+            }
             if scope == .singleton {
                 singletonCache[key] = value
             } else {

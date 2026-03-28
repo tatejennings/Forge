@@ -28,7 +28,7 @@ Add Forge to your project via Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/Forge.git", from: "1.0.0")
+    .package(url: "https://github.com/tatejennings/forge.git", from: "1.0.0")
 ]
 ```
 
@@ -51,11 +51,11 @@ final class AppContainer: Container, SharedContainer {
     static var shared = AppContainer()
 
     var networkClient: any NetworkClientProtocol {
-        provide(.singleton) { URLSessionNetworkClient() as any NetworkClientProtocol }
+        provide(.singleton) { URLSessionNetworkClient() }
     }
 
     var authService: any AuthServiceProtocol {
-        provide(.singleton) { AuthService(network: self.networkClient) as any AuthServiceProtocol }
+        provide(.singleton) { AuthService(network: self.networkClient) }
     }
 }
 ```
@@ -91,12 +91,12 @@ Forge supports three lifecycle scopes:
 ```swift
 // New instance every time (default)
 var analytics: any AnalyticsProtocol {
-    provide(.transient) { AnalyticsService() as any AnalyticsProtocol }
+    provide(.transient) { AnalyticsService() }
 }
 
 // One instance for the lifetime of the container
 var database: any DatabaseProtocol {
-    provide(.singleton) { SQLiteDatabase() as any DatabaseProtocol }
+    provide(.singleton) { SQLiteDatabase() }
 }
 
 // One instance until explicitly reset via container.resetCached()
@@ -119,10 +119,8 @@ Add a `preview:` factory to any dependency. When running in an Xcode Preview, Fo
 
 ```swift
 var authService: any AuthServiceProtocol {
-    provide(.singleton,
-            preview: { MockAuthService() as any AuthServiceProtocol }
-    ) {
-        AuthService(network: self.networkClient) as any AuthServiceProtocol
+    provide(.singleton, preview: { MockAuthService() }) {
+        AuthService(network: self.networkClient)
     }
 }
 ```
@@ -142,7 +140,7 @@ func testLoginSuccess() async throws {
     let mock = MockAuthService(shouldSucceed: true)
 
     try await AppContainer.shared.withOverrides {
-        $0.override("authService") { mock as any AuthServiceProtocol }
+        $0.override("authService") { mock }
     } run: {
         let viewModel = LoginViewModel()
         await viewModel.login(username: "user", password: "pass")
@@ -172,7 +170,7 @@ final class LoginTests: XCTestCase {
 
 ```swift
 override func setUp() {
-    AppContainer.shared.override("authService") { MockAuthService() as any AuthServiceProtocol }
+    AppContainer.shared.override("authService") { MockAuthService() }
 }
 
 override func tearDown() {
@@ -212,7 +210,7 @@ final class SearchContainer: Container, SharedContainer {
     }
 
     var searchService: any SearchServiceProtocol {
-        provide(.singleton) { SearchService(analytics: self.analytics) as any SearchServiceProtocol }
+        provide(.singleton) { SearchService(analytics: self.analytics) }
     }
 }
 ```
@@ -231,12 +229,12 @@ SearchContainer.shared.override("analytics") { CoreContainer.shared.analytics }
 **Always use protocol return types** on container properties. This is what makes mock substitution work:
 
 ```swift
-// Good — mock can substitute for any conforming type
+// Good — protocol return type allows mock substitution
 var authService: any AuthServiceProtocol {
-    provide(.singleton) { AuthService() as any AuthServiceProtocol }
+    provide(.singleton) { AuthService() }
 }
 
-// Bad — can't substitute a mock without subclassing
+// Bad — concrete return type can't be overridden with a mock
 var authService: AuthService {
     provide(.singleton) { AuthService() }
 }
