@@ -1,32 +1,32 @@
-//
-//  ForgeDemoApp.swift
-//  ForgeDemo
-//
-//  Created by Tate Jennings on 3/27/26.
-//
-
 import SwiftUI
-import SwiftData
+import FeatureTasks
+import FeatureSettings
 
 @main
 struct ForgeDemoApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    init() {
+        wireContainers()
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
-        .modelContainer(sharedModelContainer)
     }
+}
+
+// MARK: - Container Wiring (Composition Root)
+
+private func wireContainers() {
+    let core = CoreContainer.shared
+
+    // Wire TaskContainer with live dependencies from CoreContainer
+    TaskContainer.shared.override("taskService") { core.taskService }
+    TaskContainer.shared.override("appState") { core.appState }
+
+    // Wire SettingsContainer with live dependencies from CoreContainer
+    SettingsContainer.shared.override("taskService") { core.taskService }
+    SettingsContainer.shared.override("appState") { core.appState }
+
 }

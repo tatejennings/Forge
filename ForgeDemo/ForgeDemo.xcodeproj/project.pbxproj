@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		5DEA761C2F772AB1003946FE /* Forge in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA761B2F772AB1003946FE /* Forge */; };
+		5DEA76232F774DEB003946FE /* CoreInfrastructure in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76222F774DEB003946FE /* CoreInfrastructure */; };
+		5DEA76252F774DEB003946FE /* CoreModels in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76242F774DEB003946FE /* CoreModels */; };
+		5DEA76272F774DEB003946FE /* CoreNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76262F774DEB003946FE /* CoreNetworking */; };
+		5DEA76292F774DEB003946FE /* FeatureSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76282F774DEB003946FE /* FeatureSettings */; };
+		5DEA762B2F774DEB003946FE /* FeatureTasks in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA762A2F774DEB003946FE /* FeatureTasks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,7 +61,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DEA762B2F774DEB003946FE /* FeatureTasks in Frameworks */,
+				5DEA76252F774DEB003946FE /* CoreModels in Frameworks */,
+				5DEA76292F774DEB003946FE /* FeatureSettings in Frameworks */,
+				5DEA76232F774DEB003946FE /* CoreInfrastructure in Frameworks */,
 				5DEA761C2F772AB1003946FE /* Forge in Frameworks */,
+				5DEA76272F774DEB003946FE /* CoreNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +128,11 @@
 			name = ForgeDemo;
 			packageProductDependencies = (
 				5DEA761B2F772AB1003946FE /* Forge */,
+				5DEA76222F774DEB003946FE /* CoreInfrastructure */,
+				5DEA76242F774DEB003946FE /* CoreModels */,
+				5DEA76262F774DEB003946FE /* CoreNetworking */,
+				5DEA76282F774DEB003946FE /* FeatureSettings */,
+				5DEA762A2F774DEB003946FE /* FeatureTasks */,
 			);
 			productName = ForgeDemo;
 			productReference = 5DEA75EE2F772A53003946FE /* ForgeDemo.app */;
@@ -202,7 +217,7 @@
 			mainGroup = 5DEA75E52F772A53003946FE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				5DEA761A2F772AB1003946FE /* XCLocalSwiftPackageReference "../../Forge" */,
+				5DEA76212F774DEB003946FE /* XCLocalSwiftPackageReference "Packages/ForgeDemoPackages" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5DEA75EF2F772A53003946FE /* Products */;
@@ -581,9 +596,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		5DEA761A2F772AB1003946FE /* XCLocalSwiftPackageReference "../../Forge" */ = {
+		5DEA76212F774DEB003946FE /* XCLocalSwiftPackageReference "Packages/ForgeDemoPackages" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../Forge;
+			relativePath = Packages/ForgeDemoPackages;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -591,6 +606,26 @@
 		5DEA761B2F772AB1003946FE /* Forge */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Forge;
+		};
+		5DEA76222F774DEB003946FE /* CoreInfrastructure */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CoreInfrastructure;
+		};
+		5DEA76242F774DEB003946FE /* CoreModels */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CoreModels;
+		};
+		5DEA76262F774DEB003946FE /* CoreNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CoreNetworking;
+		};
+		5DEA76282F774DEB003946FE /* FeatureSettings */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FeatureSettings;
+		};
+		5DEA762A2F774DEB003946FE /* FeatureTasks */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FeatureTasks;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

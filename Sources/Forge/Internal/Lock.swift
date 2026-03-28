@@ -1,9 +1,13 @@
 import Foundation
 
-/// A thin wrapper around `NSLock` that provides a closure-based API.
+/// A thin wrapper around `NSRecursiveLock` that provides a closure-based API.
+///
+/// Recursive locking is required because container factories can reference
+/// sibling dependencies (e.g. `self.httpClient` inside `self.remoteTaskService`),
+/// which re-enters `provide` and acquires the same lock.
 final class Lock: @unchecked Sendable {
 
-    private let nsLock = NSLock()
+    private let nsLock = NSRecursiveLock()
 
     /// Acquires the lock, executes `body`, and releases the lock.
     ///
