@@ -27,7 +27,7 @@ if ! swift package generate-documentation \
     --target Forge \
     --output-path "$TMPDIR_DOCS" \
     --transform-for-static-hosting \
-    --hosting-base-path forge; then
+    --hosting-base-path Forge; then
     echo "❌ Documentation generation failed."
     exit 1
 fi
@@ -44,6 +44,6 @@ echo ""
 echo "✅ Documentation generated successfully."
 echo ""
 echo "   Local:        docs/index.html"
-echo "   GitHub Pages: https://tatejennings.github.io/forge/documentation/forge"
+echo "   GitHub Pages: https://tatejennings.github.io/Forge/documentation/forge"
 
 exit 0
