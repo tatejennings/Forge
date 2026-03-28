@@ -1,0 +1,37 @@
+name: Generate DocC Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Sources/Forge/**'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-docs:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate documentation
+        run: ./scripts/generate-docs.sh
+
+      - name: Commit and push if docs changed
+        run: |
+          if git diff --quiet docs/; then
+            echo "Docs are already up to date — nothing to commit."
+          else
+            git add docs/
+            git commit -m "docs: regenerate DocC documentation [skip ci]"
+            git push
+          fi
