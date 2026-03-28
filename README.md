@@ -67,7 +67,9 @@ The `typealias` gives you the clean `@Inject(\.property)` syntax throughout your
 ### 2. Inject Dependencies
 
 ```swift
-final class LoginViewModel: ObservableObject {
+@Observable
+final class LoginViewModel {
+    @ObservationIgnored
     @Inject(\.authService) private var authService
 
     func login(username: String, password: String) async {
@@ -75,6 +77,8 @@ final class LoginViewModel: ObservableObject {
     }
 }
 ```
+
+> **Note:** `@Inject` uses a `mutating get` for lazy resolution, which works in classes (ViewModels, services). In SwiftUI Views, use `@State` with direct container resolution instead: `@State private var viewModel = AppContainer.shared.myViewModel`
 
 That's it. No registration ceremony, no service locator, no runtime errors.
 
@@ -132,7 +136,8 @@ Every `#Preview` block will use the mock automatically. No setup required.
 Override dependencies for the duration of a test closure. Cleanup is automatic:
 
 ```swift
-func testLoginSuccess() async throws {
+@Test("Login calls auth service")
+func loginCallsService() async throws {
     let mock = MockAuthService(shouldSucceed: true)
 
     try await AppContainer.shared.withOverrides {
@@ -140,7 +145,7 @@ func testLoginSuccess() async throws {
     } run: {
         let viewModel = LoginViewModel()
         await viewModel.login(username: "user", password: "pass")
-        XCTAssertTrue(mock.loginCalled)
+        #expect(mock.loginCalled)
     }
     // overrides are automatically restored here
 }
@@ -148,29 +153,22 @@ func testLoginSuccess() async throws {
 
 ### Container Swap (for full test isolation)
 
-Create a fresh container per test class:
+Create a fresh container per test to prevent shared state leakage:
 
 ```swift
-final class LoginTests: XCTestCase {
-    override func setUp() {
-        AppContainer.shared = AppContainer()
-    }
+@Test("Login succeeds")
+@MainActor
+func loginSucceeds() async {
+    let previous = AppContainer.shared
+    defer { AppContainer.shared = previous }
 
-    override func tearDown() {
-        AppContainer.shared = AppContainer()
-    }
-}
-```
+    let container = AppContainer()
+    AppContainer.shared = container
+    container.override("authService") { MockAuthService() }
 
-### Direct Overrides (for setUp/tearDown patterns)
-
-```swift
-override func setUp() {
-    AppContainer.shared.override("authService") { MockAuthService() }
-}
-
-override func tearDown() {
-    AppContainer.shared.resetAll()
+    let vm = LoginViewModel()
+    await vm.login(username: "user", password: "pass")
+    #expect(vm.isLoggedIn)
 }
 ```
 
@@ -188,7 +186,7 @@ final class TestAppContainer: AppContainer {
 }
 ```
 
-If `authService` is accidentally called without being overridden, the test fails immediately with a clear message instead of silently executing live code.
+If `authService` is accidentally called without being overridden, the app crashes immediately with a clear message instead of silently executing live code.
 
 ---
 
@@ -242,7 +240,7 @@ var authService: AuthService {
 }
 ```
 
-**Keep containers module-scoped.** One container per module, one `DI.swift` per module. An `AuthContainer` should not register analytics services.
+**Keep containers module-scoped.** One container per module. An `AuthContainer` should not register analytics services.
 
 **Keep protocols narrow.** A `NetworkClientProtocol` should not carry authentication methods. Separate concerns into separate protocols and separate container registrations.
 
@@ -283,7 +281,7 @@ var authService: AuthService {
 | macOS | 13.0 |
 | tvOS | 16.0 |
 | watchOS | 9.0 |
-| Xcode | 16.0 |
+| Xcode | 15.3 |
 
 ---
 
