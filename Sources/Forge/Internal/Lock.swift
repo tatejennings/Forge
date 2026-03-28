@@ -5,6 +5,11 @@ import Foundation
 /// Recursive locking is required because container factories can reference
 /// sibling dependencies (e.g. `self.httpClient` inside `self.remoteTaskService`),
 /// which re-enters `provide` and acquires the same lock.
+///
+/// `@unchecked Sendable` is safe here because `NSRecursiveLock` is inherently
+/// thread-safe — its entire purpose is cross-thread synchronization. The Swift
+/// compiler can't verify this automatically since Foundation locks predate
+/// the `Sendable` protocol.
 final class Lock: @unchecked Sendable {
 
     private let nsLock = NSRecursiveLock()

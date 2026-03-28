@@ -11,6 +11,7 @@ public final class SettingsViewModel {
     public var displayName: String = ""
     public var sortOrder: SortOrder = .newestFirst
     public var isClearingCompleted: Bool = false
+    public var errorMessage: String?
 
     /// Called after clearing completed tasks so the app target can reset caches.
     public var onCompletedCleared: (() -> Void)?
@@ -37,6 +38,8 @@ public final class SettingsViewModel {
                 try await taskService.deleteTask(id: task.id)
             }
             onCompletedCleared?()
-        } catch { }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

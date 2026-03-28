@@ -37,14 +37,13 @@ struct PreviewTests {
         let first = container.previewableService
         let second = container.previewableService
 
-        // Both should be "preview" (from the preview factory)
-        #expect(first.id == "preview")
-        #expect(second.id == "preview")
+        #expect(first.id == "preview", "First resolution should use preview factory")
+        #expect(second.id == "preview", "Second resolution should use preview factory")
 
-        // They should be different instances (not cached)
-        // Since SimpleService generates a UUID for id when no id is provided,
-        // but our preview factory uses a fixed id, we verify they're both "preview"
-        // which confirms the preview factory was called (not the live singleton cache)
+        // Verify they are different instances (not cached despite .singleton scope)
+        let firstIdentity = ObjectIdentifier(first as AnyObject)
+        let secondIdentity = ObjectIdentifier(second as AnyObject)
+        #expect(firstIdentity != secondIdentity, "Preview values should not be cached — each call should produce a new instance")
     }
 
     @Test("Preview factory on transient scope also works")

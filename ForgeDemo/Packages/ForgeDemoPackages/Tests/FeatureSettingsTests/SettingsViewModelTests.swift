@@ -23,4 +23,20 @@ struct SettingsViewModelTests {
         #expect(mockState.settings.displayName == "Test User")
         #expect(mockState.settings.preferredSortOrder == .alphabetical)
     }
+
+    @Test("clearCompleted sets errorMessage on failure")
+    @MainActor
+    func clearCompletedSetsError() async {
+        let container = SettingsContainer()
+        SettingsContainer.shared = container
+
+        let mockService = MockTaskService(shouldThrow: true)
+        let mockState = MockAppState()
+        container.override("taskService") { mockService as any TaskServiceProtocol }
+        container.override("appState") { mockState as any AppStateProtocol }
+
+        let vm = SettingsViewModel()
+        await vm.clearCompleted()
+        #expect(vm.errorMessage != nil, "Error should be surfaced when clearCompleted fails")
+    }
 }

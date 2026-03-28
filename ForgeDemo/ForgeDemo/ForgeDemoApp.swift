@@ -19,6 +19,7 @@ struct ForgeDemoApp: App {
 // MARK: - Container Wiring (Composition Root)
 
 private func wireContainers() {
+    assert(Thread.isMainThread, "wireContainers must be called from the main thread")
     let core = CoreContainer.shared
 
     // Wire TaskContainer with live dependencies from CoreContainer

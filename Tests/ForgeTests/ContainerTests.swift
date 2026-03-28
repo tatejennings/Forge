@@ -3,7 +3,7 @@ import Foundation
 import Dispatch
 @testable import Forge
 
-@Suite("Container behavior")
+@Suite("Container behavior", .serialized)
 struct ContainerTests {
 
     @Test("Thread safety: concurrent singleton resolution produces one instance")
@@ -59,5 +59,24 @@ struct ContainerTests {
         var inject = ContainerInject<TestContainer, any ServiceProtocol>(\.transientService)
         let resolved = inject.wrappedValue
         #expect(resolved.id == "shared-test")
+    }
+
+    @Test("Cross-module proxy: override on owning container propagates through proxy")
+    func crossModuleProxy() {
+        let coreContainer = TestContainer()
+        let featureContainer = TestContainer()
+
+        // Feature container proxies to core container via override
+        featureContainer.override("singletonService") { coreContainer.singletonService }
+
+        let first = featureContainer.singletonService
+        let second = featureContainer.singletonService
+
+        // Both resolutions should return the same instance (core's singleton)
+        #expect(first.id == second.id, "Proxy should return core container's singleton")
+
+        // Core container's singleton should match
+        let coreResolved = coreContainer.singletonService
+        #expect(first.id == coreResolved.id, "Proxy should return the same instance as core container")
     }
 }

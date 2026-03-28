@@ -7,7 +7,7 @@ public final class TaskDetailViewModel {
     @ObservationIgnored
     @Inject(\.taskService) private var taskService
 
-    public let task: TaskItem
+    public private(set) var task: TaskItem
     public var isCompleting: Bool = false
     public var errorMessage: String?
 
@@ -20,7 +20,9 @@ public final class TaskDetailViewModel {
         isCompleting = true
         defer { isCompleting = false }
         do {
-            return try await taskService.completeTask(id: task.id)
+            let updated = try await taskService.completeTask(id: task.id)
+            task = updated
+            return updated
         } catch {
             errorMessage = error.localizedDescription
             return nil

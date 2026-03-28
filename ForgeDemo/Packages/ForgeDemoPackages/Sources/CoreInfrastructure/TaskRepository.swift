@@ -2,7 +2,8 @@ import Foundation
 import SwiftData
 import CoreModels
 
-public final class TaskRepository: TaskRepositoryProtocol, @unchecked Sendable {
+/// All methods are `@MainActor` because SwiftData `ModelContext` requires actor isolation.
+public final class TaskRepository: TaskRepositoryProtocol {
     private let stack: SwiftDataStack
 
     public init(stack: SwiftDataStack) {

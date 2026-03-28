@@ -9,14 +9,20 @@ public final class TaskContainer: Container, SharedContainer, @unchecked Sendabl
     /// Override this with a real implementation from the app target's CoreContainer.
     public var taskService: any TaskServiceProtocol {
         provide(.singleton, preview: { MockTaskService() }) {
-            MockTaskService()
+            #if DEBUG
+            print("[Forge] ⚠️ taskService resolved without override — using mock fallback")
+            #endif
+            return MockTaskService()
         }
     }
 
     /// Override this with a real implementation from the app target's CoreContainer.
     public var appState: any AppStateProtocol {
         provide(.singleton, preview: { MockAppState() }) {
-            MockAppState()
+            #if DEBUG
+            print("[Forge] ⚠️ appState resolved without override — using mock fallback")
+            #endif
+            return MockAppState()
         }
     }
 

@@ -61,11 +61,21 @@ open class Container: @unchecked Sendable {
             #endif
             return overrides[key]
         }) {
-            // Force cast is safe: the override was registered with a matching type.
-            // If it doesn't match, fall through to factory (spec: do not crash).
-            if let value = overrideFactory() as? T {
+            let result = overrideFactory()
+            // Direct cast. If T is an existential (e.g. `any Protocol`), a simple
+            // `as? T` can fail due to double-existential wrapping in Swift's type system.
+            // Casting to Any first then to T handles this edge case.
+            if let value = result as? T {
                 return value
             }
+            // Fallback: unwrap any existential boxing by round-tripping through Any
+            let mirror = result as Any
+            if let value = mirror as? T {
+                return value
+            }
+            #if DEBUG
+            print("[Forge] ⚠️ Override for '\(key)' returned \(type(of: result)) but expected \(T.self). Falling through to factory.")
+            #endif
         }
 
         // 2. Preview factory — never cached
@@ -179,7 +189,10 @@ open class Container: @unchecked Sendable {
     ///   - factory: A closure that produces the override value.
     public func override<T>(_ key: String, with factory: @escaping @Sendable () -> T) {
         lock.withLock {
-            overrides[key] = factory
+            // Wrap the factory to return the concrete value directly as Any,
+            // avoiding double-existential boxing when T is an existential type
+            // (e.g. `any AppStateProtocol`).
+            overrides[key] = { factory() as Any }
             #if DEBUG
             registeredOverrideKeys.insert(key)
             #endif

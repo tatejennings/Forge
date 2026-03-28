@@ -1,9 +1,14 @@
 /// A property wrapper that lazily resolves a dependency from a ``Container``.
 ///
 /// Resolution is deferred to first access of `wrappedValue`, not at initialization.
-/// This avoids ordering issues when containers are configured after object creation.
+/// This is important because property wrappers initialize before their enclosing
+/// type's `init` body runs — eager resolution would fail if the container is
+/// configured (via overrides) after the object is created, which is common in tests.
 ///
-/// **With a `SharedContainer`** (preferred — clean call sites):
+/// ## Usage with SharedContainer (preferred)
+///
+/// Define a module-local typealias for clean call sites:
+///
 /// ```swift
 /// // In your module's DI.swift:
 /// typealias Inject<T> = ContainerInject<AppContainer, T>
@@ -12,14 +17,22 @@
 /// @Inject(\.authService) private var auth
 /// ```
 ///
-/// **With an explicit container instance:**
+/// ## Usage with an explicit container
+///
 /// ```swift
 /// @ContainerInject(myContainer, \.authService) private var auth
 /// ```
 ///
-/// - Note: This property wrapper uses a `mutating get` for lazy resolution,
-///   which works in class contexts. In struct contexts, the enclosing struct
-///   must be declared as `var`.
+/// ## Limitations
+///
+/// This property wrapper uses a `mutating get` for lazy resolution. This works
+/// naturally in **class** contexts (ViewModels, services). In **SwiftUI Views**
+/// (structs), use `@State` with direct container resolution instead:
+///
+/// ```swift
+/// // In a SwiftUI View:
+/// @State private var viewModel = MyContainer.shared.myViewModel
+/// ```
 @propertyWrapper
 public struct ContainerInject<C: Container, Value> {
 
