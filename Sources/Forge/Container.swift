@@ -62,15 +62,7 @@ open class Container: @unchecked Sendable {
             return overrides[key]
         }) {
             let result = overrideFactory()
-            // Direct cast. If T is an existential (e.g. `any Protocol`), a simple
-            // `as? T` can fail due to double-existential wrapping in Swift's type system.
-            // Casting to Any first then to T handles this edge case.
             if let value = result as? T {
-                return value
-            }
-            // Fallback: unwrap any existential boxing by round-tripping through Any
-            let mirror = result as Any
-            if let value = mirror as? T {
                 return value
             }
             #if DEBUG

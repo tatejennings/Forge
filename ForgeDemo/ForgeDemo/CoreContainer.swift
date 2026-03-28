@@ -10,17 +10,17 @@ nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Se
     
     var httpClient: any HTTPClientProtocol {
         provide(.singleton,
-                preview: { MockHTTPClient() }
+                preview: { MockHTTPClient() as any HTTPClientProtocol }
         ) {
-            URLSessionHTTPClient()
+            URLSessionHTTPClient() as any HTTPClientProtocol
         }
     }
 
     var remoteTaskService: any RemoteTaskServiceProtocol {
         provide(.singleton,
-                preview: { MockRemoteTaskService() }
+                preview: { MockRemoteTaskService() as any RemoteTaskServiceProtocol }
         ) {
-            RemoteTaskService(httpClient: self.httpClient)
+            RemoteTaskService(httpClient: self.httpClient) as any RemoteTaskServiceProtocol
         }
     }
 
@@ -33,27 +33,27 @@ nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Se
     }
 
     var taskRepository: any TaskRepositoryProtocol {
-        provide(.singleton) { TaskRepository(stack: self.swiftDataStack) }
+        provide(.singleton) { TaskRepository(stack: self.swiftDataStack) as any TaskRepositoryProtocol }
     }
 
     // MARK: - Services
 
     var taskService: any TaskServiceProtocol {
         provide(.singleton,
-                preview: { MockTaskService() }
+                preview: { MockTaskService() as any TaskServiceProtocol }
         ) {
             TaskService(
                 repository: self.taskRepository,
                 remoteService: self.remoteTaskService
-            )
+            ) as any TaskServiceProtocol
         }
     }
 
     var appState: any AppStateProtocol {
         provide(.singleton,
-                preview: { MockAppState(displayName: "Preview User") }
+                preview: { MockAppState(displayName: "Preview User") as any AppStateProtocol }
         ) {
-            AppStateService()
+            AppStateService() as any AppStateProtocol
         }
     }
 }
