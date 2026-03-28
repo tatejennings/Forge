@@ -131,9 +131,7 @@ Every `#Preview` block will use the mock automatically. No setup required.
 
 ## Testing
 
-### Scoped Overrides (preferred)
-
-Override dependencies for the duration of a test closure. Cleanup is automatic:
+Use `withOverrides` to swap dependencies for the duration of a test. Cleanup is automatic — overrides are restored when the closure exits, even if it throws:
 
 ```swift
 @Test("Login calls auth service")
@@ -151,25 +149,10 @@ func loginCallsService() async throws {
 }
 ```
 
-### Container Swap (for full test isolation)
-
-Create a fresh container per test to prevent shared state leakage:
+Need a completely fresh container with no cached singletons? Call `resetAll()`:
 
 ```swift
-@Test("Login succeeds")
-@MainActor
-func loginSucceeds() async {
-    let previous = AppContainer.shared
-    defer { AppContainer.shared = previous }
-
-    let container = AppContainer()
-    AppContainer.shared = container
-    container.override("authService") { MockAuthService() }
-
-    let vm = LoginViewModel()
-    await vm.login(username: "user", password: "pass")
-    #expect(vm.isLoggedIn)
-}
+AppContainer.shared.resetAll()
 ```
 
 ---
