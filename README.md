@@ -241,8 +241,8 @@ The app target is the **composition root** — it's the only place that imports 
 ```swift
 // In your App's init()
 func wireContainers() {
-    let core = CoreContainer.shared
-    SearchContainer.shared.override("analytics") { core.analytics }
+    let app = AppContainer.shared
+    SearchContainer.shared.override("analytics") { app.analytics }
 }
 ```
 

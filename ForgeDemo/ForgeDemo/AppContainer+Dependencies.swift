@@ -1,13 +1,17 @@
+import Foundation
 import Forge
 import CoreModels
 import CoreNetworking
 import CoreInfrastructure
+import FeatureTasks
+import FeatureSettings
 
-nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Sendable {
-    nonisolated(unsafe) static var shared = CoreContainer()
+// MARK: - App Dependencies
 
-    // MARK: - Networking
-    
+extension AppContainer {
+
+    // MARK: Networking
+
     var httpClient: any HTTPClientProtocol {
         provide(.singleton, preview: { MockHTTPClient() }) {
             URLSessionHTTPClient()
@@ -20,7 +24,7 @@ nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Se
         }
     }
 
-    // MARK: - Persistence
+    // MARK: Persistence
 
     var swiftDataStack: SwiftDataStack {
         provide(.singleton) {
@@ -32,7 +36,7 @@ nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Se
         provide(.singleton) { TaskRepository(stack: self.swiftDataStack) }
     }
 
-    // MARK: - Services
+    // MARK: Services
 
     var taskService: any TaskServiceProtocol {
         provide(.singleton, preview: { MockTaskService() }) {
@@ -48,4 +52,23 @@ nonisolated final class CoreContainer: Container, SharedContainer, @unchecked Se
             AppStateService()
         }
     }
+}
+
+// MARK: - Container Wiring (Composition Root)
+
+func wireContainers() {
+    assert(Thread.isMainThread, "wireContainers must be called from the main thread")
+    let app = AppContainer.shared
+
+    // Resolve once eagerly, then hand the instances to the @Sendable closures
+    let taskService = app.taskService
+    let appState = app.appState
+
+    // Wire TaskContainer with live dependencies from AppContainer
+    TaskContainer.shared.override("taskService") { taskService }
+    TaskContainer.shared.override("appState") { appState }
+
+    // Wire SettingsContainer with live dependencies from AppContainer
+    SettingsContainer.shared.override("taskService") { taskService }
+    SettingsContainer.shared.override("appState") { appState }
 }

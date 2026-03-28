@@ -8,7 +8,7 @@ public final class TaskContainer: Container, SharedContainer, @unchecked Sendabl
 
     // MARK: - Cross-module proxies (wired by app target at startup via override)
 
-    /// Override this with a real implementation from the app target's CoreContainer.
+    /// Override this with a real implementation from the app target's AppContainer.
     public var taskService: any TaskServiceProtocol {
         provide(.singleton, preview: { MockTaskService() }) {
             #if DEBUG
@@ -18,7 +18,7 @@ public final class TaskContainer: Container, SharedContainer, @unchecked Sendabl
         }
     }
 
-    /// Override this with a real implementation from the app target's CoreContainer.
+    /// Override this with a real implementation from the app target's AppContainer.
     public var appState: any AppStateProtocol {
         provide(.singleton, preview: { MockAppState() }) {
             #if DEBUG

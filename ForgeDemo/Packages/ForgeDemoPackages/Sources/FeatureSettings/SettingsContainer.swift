@@ -6,7 +6,7 @@ typealias Inject<T> = ContainerInject<SettingsContainer, T>
 public final class SettingsContainer: Container, SharedContainer, @unchecked Sendable {
     nonisolated(unsafe) public static var shared = SettingsContainer()
 
-    /// Override this with a real implementation from the app target's CoreContainer.
+    /// Override this with a real implementation from the app target's AppContainer.
     public var appState: any AppStateProtocol {
         provide(.singleton, preview: { MockAppState() }) {
             #if DEBUG
@@ -16,7 +16,7 @@ public final class SettingsContainer: Container, SharedContainer, @unchecked Sen
         }
     }
 
-    /// Override this with a real implementation from the app target's CoreContainer.
+    /// Override this with a real implementation from the app target's AppContainer.
     public var taskService: any TaskServiceProtocol {
         provide(.singleton, preview: { MockTaskService() }) {
             #if DEBUG
