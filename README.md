@@ -2,7 +2,7 @@
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20visionOS-4A90D9.svg?style=flat)
 ![SPM](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-brightgreen.svg?style=flat)
 
-![](docs/forge_logo.png)
+![Forge](.github/forge_logo.png)
 
 A lightweight, compile-time safe dependency injection framework for Swift.
 
