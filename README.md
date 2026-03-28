@@ -47,6 +47,8 @@ Then add `Forge` to your target's dependencies:
 ```swift
 import Forge
 
+typealias Inject<T> = ContainerInject<AppContainer, T>
+
 final class AppContainer: Container, SharedContainer {
     static var shared = AppContainer()
 
@@ -60,15 +62,9 @@ final class AppContainer: Container, SharedContainer {
 }
 ```
 
-### 2. Create a Module-Local Typealias
+The `typealias` gives you the clean `@Inject(\.property)` syntax throughout your module.
 
-```swift
-// DI.swift — one per module
-import Forge
-typealias Inject<T> = ContainerInject<AppContainer, T>
-```
-
-### 3. Inject Dependencies
+### 2. Inject Dependencies
 
 ```swift
 final class LoginViewModel: ObservableObject {

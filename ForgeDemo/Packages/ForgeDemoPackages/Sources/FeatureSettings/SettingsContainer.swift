@@ -1,6 +1,8 @@
 import Forge
 import CoreModels
 
+typealias Inject<T> = ContainerInject<SettingsContainer, T>
+
 public final class SettingsContainer: Container, SharedContainer, @unchecked Sendable {
     nonisolated(unsafe) public static var shared = SettingsContainer()
 

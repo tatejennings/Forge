@@ -1,5 +1,7 @@
-import Forge
+@_exported import Forge
 import CoreModels
+
+typealias Inject<T> = ContainerInject<TaskContainer, T>
 
 public final class TaskContainer: Container, SharedContainer, @unchecked Sendable {
     nonisolated(unsafe) public static var shared = TaskContainer()
