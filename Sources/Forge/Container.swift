@@ -13,8 +13,31 @@
 /// }
 /// ```
 ///
+/// Conform to ``SharedContainer`` to enable the zero-argument
+/// ``ContainerInject`` syntax (`@Inject(\.property)`).
+///
 /// - Important: Always use protocol return types on dependency properties
 ///   to enable mock substitution in tests and previews.
+///
+/// - Note: All cache and override access is protected by an `NSRecursiveLock`,
+///   making `Container` safe to use from multiple threads. The lock is recursive
+///   because sibling dependency resolution re-enters ``provide(_:preview:key:_:)``.
+///
+/// ## Topics
+///
+/// ### Creating a Container
+/// - ``init()``
+///
+/// ### Resolving Dependencies
+/// - ``provide(_:preview:key:_:)``
+///
+/// ### Testing and Overrides
+/// - ``withOverrides(_:run:)-3qdpl``
+/// - ``withOverrides(_:run:)-4eui2``
+/// - ``override(_:with:)``
+/// - ``removeOverride(for:)``
+/// - ``resetAll()``
+/// - ``resetCached()``
 open class Container: @unchecked Sendable {
 
     // MARK: - Internal Storage
@@ -31,6 +54,7 @@ open class Container: @unchecked Sendable {
 
     // MARK: - Initialization
 
+    /// Creates an empty container with no cached values or overrides.
     public init() {}
 
     // MARK: - Core Resolution
@@ -54,6 +78,13 @@ open class Container: @unchecked Sendable {
     ///   - key: The registration key. Defaults to the property name via `#function`.
     ///   - factory: The factory closure that creates the dependency.
     /// - Returns: The resolved dependency instance.
+    ///
+    /// - Note: Resolution follows a strict precedence order:
+    ///   1. **Overrides** — checked first; override type mismatches fall through with a
+    ///      DEBUG warning instead of crashing.
+    ///   2. **Preview factory** — used when running inside an Xcode preview and a
+    ///      `preview` closure was provided. Preview values are never cached.
+    ///   3. **Normal factory** — the default path for transient, singleton, and cached scopes.
     public func provide<T>(
         _ scope: Scope = .transient,
         preview: (() -> Any)? = nil,
@@ -163,7 +194,15 @@ open class Container: @unchecked Sendable {
         try body()
     }
 
-    /// Async variant of ``withOverrides(_:run:)-6oex3`` for use in async test contexts.
+    /// Registers overrides for the duration of an async closure, then automatically
+    /// restores the previous state.
+    ///
+    /// This is the async variant of ``withOverrides(_:run:)-3qdpl``. Use it when your
+    /// test body contains `await` calls.
+    ///
+    /// - Parameters:
+    ///   - configure: A closure that registers overrides via an ``OverrideBuilder``.
+    ///   - body: The async closure to execute with overrides active.
     public func withOverrides(
         _ configure: (inout OverrideBuilder) -> Void,
         run body: () async throws -> Void
@@ -189,7 +228,7 @@ open class Container: @unchecked Sendable {
     /// Registers a replacement factory for a given key directly.
     ///
     /// Use this for `setUp`/`tearDown` patterns where the closure-based
-    /// ``withOverrides(_:run:)-6oex3`` is impractical.
+    /// ``withOverrides(_:run:)-3qdpl`` is impractical.
     ///
     /// - Parameters:
     ///   - key: Must exactly match the computed property name on the container.
@@ -210,7 +249,12 @@ open class Container: @unchecked Sendable {
         }
     }
 
-    /// Removes all registered overrides and clears all cached/singleton values.
+    /// Removes all registered overrides and clears all cached and singleton values.
+    ///
+    /// In DEBUG builds, emits warnings for any override keys that were registered but
+    /// never accessed — this helps catch typos in override key strings.
+    ///
+    /// - SeeAlso: ``resetCached()`` to clear only cached-scope values.
     public func resetAll() {
         lock.withLock {
             #if DEBUG
@@ -225,6 +269,11 @@ open class Container: @unchecked Sendable {
     }
 
     /// Clears only cached-scope values. Leaves singletons and overrides intact.
+    ///
+    /// Use this to reset ``Scope/cached`` dependencies between test cases while
+    /// preserving longer-lived singletons.
+    ///
+    /// - SeeAlso: ``resetAll()`` to clear everything including singletons and overrides.
     public func resetCached() {
         lock.withLock {
             cachedCache.removeAll()

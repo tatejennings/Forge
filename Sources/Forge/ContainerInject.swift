@@ -7,10 +7,11 @@
 ///
 /// ## Usage with SharedContainer (preferred)
 ///
-/// Define a module-local typealias for clean call sites:
+/// Define a module-local typealias for clean call sites. The container must
+/// conform to ``SharedContainer``:
 ///
 /// ```swift
-/// // In your module's DI.swift:
+/// // In your module's container file:
 /// typealias Inject<T> = ContainerInject<AppContainer, T>
 ///
 /// // At the call site:
@@ -41,6 +42,9 @@ public struct ContainerInject<C: Container, Value> {
     private var _resolved: Value?
 
     /// The resolved dependency value. Resolved lazily on first access.
+    ///
+    /// Once resolved, the value is cached inside the wrapper — subsequent accesses
+    /// return the same instance without re-resolving from the container.
     public var wrappedValue: Value {
         mutating get {
             if let resolved = _resolved {

@@ -8,6 +8,9 @@
 ///     static var shared = AppContainer()
 /// }
 /// ```
+///
+/// The `shared` property is declared `{ get set }` so tests can swap the
+/// container instance for a fresh one — see <doc:TestingWithForge> for details.
 public protocol SharedContainer: AnyObject {
     static var shared: Self { get set }
 }

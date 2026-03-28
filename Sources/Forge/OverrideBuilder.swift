@@ -1,4 +1,4 @@
-/// Accumulates override registrations for use with ``Container/withOverrides(_:run:)-6oex3``.
+/// Accumulates override registrations for use with ``Container/withOverrides(_:run:)-3qdpl``.
 ///
 /// The builder is passed into the configuration closure of `withOverrides`.
 /// Register overrides by calling ``override(_:with:)`` with a key that matches
