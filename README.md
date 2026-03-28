@@ -6,7 +6,7 @@
 
 A lightweight, compile-time safe dependency injection framework for Swift.
 
-Forge makes DI easier than not using it. Define a container, register dependencies as computed properties, and inject them with a single line. No code generation, no reflection, no third-party dependencies.
+Forge makes dependency injection feel natural in Swift — minimal boilerplate, no magic, just clean code. Define a container, register dependencies as computed properties, and inject them with a single line. No code generation, no reflection, no third-party dependencies.
 
 ---
 
