@@ -19,8 +19,10 @@ generation, no reflection, no third-party dependencies.
 ```swift
 extension AppContainer {
     var authService: any AuthServiceProtocol {
-        provide(.singleton, preview: { MockAuthService() }) {
+        provide(.singleton) {
             AuthService(network: self.networkClient)
+        } preview: {
+            MockAuthService()
         }
     }
 }
@@ -46,7 +48,7 @@ class LoginViewModel {
 - ``ContainerInject``
 - ``SharedContainer``
 
-### Testing
+### Testing and Contracts
 
 - <doc:TestingWithForge>
 - ``OverrideBuilder``

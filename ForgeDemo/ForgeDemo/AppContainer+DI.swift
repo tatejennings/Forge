@@ -12,14 +12,18 @@ extension AppContainer {
     // MARK: Networking
 
     var httpClient: any HTTPClientProtocol {
-        provide(.singleton, preview: { MockHTTPClient() }) {
+        provide(.singleton) {
             URLSessionHTTPClient()
+        } preview: {
+            MockHTTPClient()
         }
     }
 
     var remoteTaskService: any RemoteTaskServiceProtocol {
-        provide(.singleton, preview: { MockRemoteTaskService() }) {
+        provide(.singleton) {
             RemoteTaskService(httpClient: self.httpClient)
+        } preview: {
+            MockRemoteTaskService()
         }
     }
 
@@ -38,17 +42,21 @@ extension AppContainer {
     // MARK: Services
 
     var taskService: any TaskServiceProtocol {
-        provide(.singleton, preview: { MockTaskService() }) {
+        provide(.singleton) {
             TaskService(
                 repository: self.taskRepository,
                 remoteService: self.remoteTaskService
             )
+        } preview: {
+            MockTaskService()
         }
     }
 
     var appState: any AppStateProtocol {
-        provide(.singleton, preview: { MockAppState(displayName: "Preview User") }) {
+        provide(.singleton) {
             AppStateService()
+        } preview: {
+            MockAppState(displayName: "Preview User")
         }
     }
 

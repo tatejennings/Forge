@@ -25,8 +25,10 @@ public final class AuthContainer: Container, SharedContainer {
     public static var shared = AuthContainer()
 
     public var authService: any AuthServiceProtocol {
-        provide(.singleton, preview: { MockAuthService() }) {
+        provide(.singleton) {
             AuthService(network: self.networkClient)
+        } preview: {
+            MockAuthService()
         }
     }
 
@@ -50,20 +52,24 @@ final class LoginViewModel: ObservableObject {
 
 Feature modules must not import other feature modules directly. If a module needs a
 dependency owned by another module, it **proxies** the dependency through its own
-container:
+container using ``unimplemented(_:file:line:)`` as the default factory. The app target
+wires the real implementation at startup via ``Container/override(_:with:)``:
 
 ```swift
 // FeatureSearch/Sources/SearchContainer.swift
 
 import Forge
-import CoreAnalytics
 
 public final class SearchContainer: Container, SharedContainer {
     public static var shared = SearchContainer()
 
-    // Proxy — delegates to another module's container
+    // Wired by the app target — crashes if not overridden
     public var analytics: any AnalyticsProtocol {
-        provide { CoreAnalyticsContainer.shared.analytics }
+        provide(.singleton) {
+            unimplemented("analytics")
+        } preview: {
+            MockAnalytics()
+        }
     }
 
     public var searchService: any SearchServiceProtocol {
@@ -74,12 +80,17 @@ public final class SearchContainer: Container, SharedContainer {
 }
 ```
 
+Using ``unimplemented(_:file:line:)`` here means that if the composition root forgets
+to wire `analytics`, the app crashes on launch with a clear message instead of
+silently running on mock data.
+
 ### Benefits of Proxying
 
+- **Fail-fast safety** — ``unimplemented(_:file:line:)`` catches missing wiring immediately
 - **Test isolation** — override `analytics` on `SearchContainer` directly, without
-  touching `CoreAnalyticsContainer`
+  touching another module's container
 - **Clean dependency graph** — each module's DI surface is fully within its own container
-- **Swappability** — if `CoreAnalytics` is replaced, only the proxy property needs updating
+- **Swappability** — if the analytics provider changes, only the override needs updating
 
 ## The Composition Root
 

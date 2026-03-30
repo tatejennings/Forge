@@ -16,10 +16,10 @@ final class TestContainer: Container, SharedContainer, @unchecked Sendable {
     }
 
     var previewableService: any ServiceProtocol {
-        provide(.singleton, preview: { SimpleService(id: "preview") }) { SimpleService(id: "live") }
+        provide(.singleton) { SimpleService(id: "live") } preview: { SimpleService(id: "preview") }
     }
 
     var transientPreviewable: any ServiceProtocol {
-        provide(.transient, preview: { SimpleService(id: "preview-transient") }) { SimpleService(id: "live-transient") }
+        provide(.transient) { SimpleService(id: "live-transient") } preview: { SimpleService(id: "preview-transient") }
     }
 }

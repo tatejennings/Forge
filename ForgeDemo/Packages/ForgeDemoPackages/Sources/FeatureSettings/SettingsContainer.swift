@@ -8,21 +8,19 @@ public final class SettingsContainer: Container, SharedContainer, @unchecked Sen
 
     /// Override this with a real implementation from the app target's AppContainer.
     public var appState: any AppStateProtocol {
-        provide(.singleton, preview: { MockAppState() }) {
-            #if DEBUG
-            print("[Forge] ⚠️ appState resolved without override — using mock fallback")
-            #endif
-            return MockAppState()
+        provide(.singleton) {
+            unimplemented("appState")
+        } preview: {
+            MockAppState()
         }
     }
 
     /// Override this with a real implementation from the app target's AppContainer.
     public var taskService: any TaskServiceProtocol {
-        provide(.singleton, preview: { MockTaskService() }) {
-            #if DEBUG
-            print("[Forge] ⚠️ taskService resolved without override — using mock fallback")
-            #endif
-            return MockTaskService()
+        provide(.singleton) {
+            unimplemented("taskService")
+        } preview: {
+            MockTaskService()
         }
     }
 

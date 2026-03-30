@@ -158,8 +158,10 @@ Add a `preview:` factory to any dependency. When running in an Xcode Preview, Fo
 
 ```swift
 var authService: any AuthServiceProtocol {
-    provide(.singleton, preview: { MockAuthService() }) {
+    provide(.singleton) {
         AuthService(network: self.networkClient)
+    } preview: {
+        MockAuthService()
     }
 }
 ```
@@ -200,7 +202,22 @@ AppContainer.shared.resetAll()
 
 ## The `unimplemented` Helper
 
-Make test boundaries explicit. Any dependency not overridden in a test will loudly fail if called:
+Make dependency contracts explicit. Any dependency marked as `unimplemented` will crash immediately if resolved without being overridden — instead of silently running the wrong code.
+
+**Cross-module proxies** — feature modules that depend on services wired by the app target should use `unimplemented` as the default factory. If the composition root forgets to wire the dependency, the app crashes on launch with a clear message:
+
+```swift
+// In FeatureSearch — analytics is wired by the app target
+var analytics: any AnalyticsProtocol {
+    provide(.singleton) {
+        unimplemented("analytics")
+    } preview: {
+        MockAnalytics()
+    }
+}
+```
+
+**Test containers** — ensure any dependency not explicitly overridden in a test fails loudly if called:
 
 ```swift
 final class TestAuthContainer: AuthContainer {
@@ -209,8 +226,6 @@ final class TestAuthContainer: AuthContainer {
     }
 }
 ```
-
-If `authService` is accidentally called without being overridden, the app crashes immediately with a clear message instead of silently executing live code.
 
 ---
 
@@ -227,7 +242,7 @@ final class SearchContainer: Container, SharedContainer {
 
     // Wired by the app target at startup via override
     var analytics: any AnalyticsProtocol {
-        provide(.singleton) { MockAnalytics() }
+        provide(.singleton) { unimplemented("analytics") }
     }
 
     var searchService: any SearchServiceProtocol {
@@ -296,7 +311,7 @@ var authService: AuthService {
 
 | Method | Description |
 |--------|-------------|
-| [`provide(_:preview:key:_:)`](https://tatejennings.github.io/Forge/documentation/forge/container/provide(_:preview:key:_:)) | Register and resolve a dependency with scope and optional preview factory. |
+| [`provide(_:key:_:preview:)`](https://tatejennings.github.io/Forge/documentation/forge/container/provide(_:key:_:preview:)) | Register and resolve a dependency with scope and optional preview factory. |
 | [`withOverrides(_:run:)`](https://tatejennings.github.io/Forge/documentation/forge/container) | Apply overrides for the duration of a closure (sync and async variants). |
 | [`override(_:with:)`](https://tatejennings.github.io/Forge/documentation/forge/container/override(_:with:)) | Register a replacement factory for a key. |
 | [`removeOverride(for:)`](https://tatejennings.github.io/Forge/documentation/forge/container/removeoverride(for:)) | Remove a single override. |

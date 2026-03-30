@@ -1,6 +1,6 @@
 /// Defines the lifecycle of a dependency managed by a ``Container``.
 ///
-/// Pass a scope to ``Container/provide(_:preview:key:_:)`` to control how
+/// Pass a scope to ``Container/provide(_:key:_:preview:)`` to control how
 /// instances are created and cached.
 ///
 /// | Scope | Behavior |

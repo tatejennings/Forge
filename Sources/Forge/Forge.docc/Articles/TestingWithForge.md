@@ -81,8 +81,13 @@ overrides require manual cleanup via ``Container/removeOverride(for:)`` or
 
 ## The TestContainer Pattern with unimplemented
 
-Use ``unimplemented(_:file:line:)`` to define a test container where every dependency
-fails loudly if called without being explicitly overridden:
+``unimplemented(_:file:line:)`` makes dependency contracts explicit — any dependency
+that isn't overridden crashes immediately instead of silently running the wrong code.
+This is valuable in tests (shown here) and in cross-module proxies (see
+<doc:ModularArchitecture>).
+
+Use it to define a test container where every dependency fails loudly if called
+without being explicitly overridden:
 
 ```swift
 final class TestAuthContainer: AuthContainer {

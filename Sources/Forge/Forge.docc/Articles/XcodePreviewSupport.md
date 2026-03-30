@@ -11,19 +11,23 @@ checks needed in your view code.
 
 ## The preview Parameter
 
-Pass a `preview` closure to ``Container/provide(_:preview:key:_:)`` alongside the
+Pass a `preview` closure to ``Container/provide(_:key:_:preview:)`` alongside the
 normal factory:
 
 ```swift
 public var authService: any AuthServiceProtocol {
-    provide(.singleton, preview: { MockAuthService() }) {
+    provide(.singleton) {
         AuthService(network: self.networkClient)
+    } preview: {
+        MockAuthService()
     }
 }
 
 public var networkClient: any NetworkClientProtocol {
-    provide(.singleton, preview: { MockNetworkClient() }) {
+    provide(.singleton) {
         URLSessionNetworkClient()
+    } preview: {
+        MockNetworkClient()
     }
 }
 ```
@@ -39,7 +43,7 @@ standard detection mechanism used across the Swift community.
 
 ### Resolution Precedence
 
-When ``Container/provide(_:preview:key:_:)`` is called, resolution follows this order:
+When ``Container/provide(_:key:_:preview:)`` is called, resolution follows this order:
 
 1. **Overrides** — always checked first (test overrides take priority)
 2. **Preview factory** — used if running in a preview and a `preview` closure was provided

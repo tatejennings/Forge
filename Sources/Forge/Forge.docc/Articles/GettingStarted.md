@@ -46,8 +46,10 @@ extension AppContainer {
     }
 
     var authService: any AuthServiceProtocol {
-        provide(.singleton, preview: { MockAuthService() }) {
+        provide(.singleton) {
             AuthService(network: self.networkClient)
+        } preview: {
+            MockAuthService()
         }
     }
 }
@@ -80,8 +82,10 @@ final class AuthContainer: Container, SharedContainer {
     static var shared = AuthContainer()
 
     var authService: any AuthServiceProtocol {
-        provide(.singleton, preview: { MockAuthService() }) {
+        provide(.singleton) {
             AuthService(network: self.networkClient)
+        } preview: {
+            MockAuthService()
         }
     }
 

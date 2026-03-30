@@ -1,14 +1,14 @@
 /// The base class for all dependency containers in Forge.
 ///
 /// Subclass `Container` to define your module's dependencies as computed properties.
-/// Each property calls ``provide(_:preview:key:_:)`` to register its factory and scope.
+/// Each property calls ``provide(_:key:_:preview:)`` to register its factory and scope.
 ///
 /// ```swift
 /// final class AppContainer: Container, SharedContainer {
 ///     static var shared = AppContainer()
 ///
 ///     var authService: any AuthServiceProtocol {
-///         provide(.singleton, preview: { MockAuthService() }) { AuthService() }
+///         provide(.singleton) { AuthService() } preview: { MockAuthService() }
 ///     }
 /// }
 /// ```
@@ -21,7 +21,7 @@
 ///
 /// - Note: All cache and override access is protected by an `NSRecursiveLock`,
 ///   making `Container` safe to use from multiple threads. The lock is recursive
-///   because sibling dependency resolution re-enters ``provide(_:preview:key:_:)``.
+///   because sibling dependency resolution re-enters ``provide(_:key:_:preview:)``.
 ///
 /// ## Topics
 ///
@@ -29,7 +29,7 @@
 /// - ``init()``
 ///
 /// ### Resolving Dependencies
-/// - ``provide(_:preview:key:_:)``
+/// - ``provide(_:key:_:preview:)``
 ///
 /// ### Testing and Overrides
 /// - ``withOverrides(_:run:)-3qdpl``
@@ -67,16 +67,20 @@ open class Container: @unchecked Sendable {
     ///
     /// ```swift
     /// var authService: any AuthServiceProtocol {
-    ///     provide(.singleton, preview: { MockAuthService() }) { LiveAuthService() }
+    ///     provide(.singleton) {
+    ///         LiveAuthService()
+    ///     } preview: {
+    ///         MockAuthService()
+    ///     }
     /// }
     /// ```
     ///
     /// - Parameters:
     ///   - scope: The lifecycle scope for this dependency. Defaults to `.transient`.
-    ///   - preview: An optional factory used when running inside an Xcode preview.
-    ///     Preview values are never cached regardless of the declared scope.
     ///   - key: The registration key. Defaults to the property name via `#function`.
     ///   - factory: The factory closure that creates the dependency.
+    ///   - preview: An optional factory used when running inside an Xcode preview.
+    ///     Preview values are never cached regardless of the declared scope.
     /// - Returns: The resolved dependency instance.
     ///
     /// - Note: Resolution follows a strict precedence order:
@@ -87,9 +91,9 @@ open class Container: @unchecked Sendable {
     ///   3. **Normal factory** — the default path for transient, singleton, and cached scopes.
     public func provide<T>(
         _ scope: Scope = .transient,
-        preview: (() -> Any)? = nil,
         key: String = #function,
-        _ factory: () -> Any
+        _ factory: () -> Any,
+        preview: (() -> Any)? = nil
     ) -> T {
         // 1. Check overrides first — overrides are never cached
         if let overrideFactory = lock.withLock({
