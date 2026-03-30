@@ -53,7 +53,7 @@ final class LoginViewModel: ObservableObject {
 Feature modules must not import other feature modules directly. If a module needs a
 dependency owned by another module, it **proxies** the dependency through its own
 container using ``unimplemented(_:file:line:)`` as the default factory. The app target
-wires the real implementation at startup via ``Container/override(_:with:)``:
+wires the real implementation at startup via ``OverridableContainer/override(_:with:)``:
 
 ```swift
 // FeatureSearch/Sources/SearchContainer.swift

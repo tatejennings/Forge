@@ -54,7 +54,7 @@ different factory:
 ```swift
 // Correct: extend at the container boundary
 try await AuthContainer.shared.withOverrides {
-    $0.override("authService") { MockAuthService() }
+    $0.override(\.authService) { MockAuthService() }
 } run: {
     // test code...
 }

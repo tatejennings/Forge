@@ -16,8 +16,8 @@ struct TaskListViewModelTests {
 
         let mockService = MockTaskService(tasks: TaskItem.previews)
         let mockState = MockAppState()
-        container.override("taskService") { mockService as any TaskServiceProtocol }
-        container.override("appState") { mockState as any AppStateProtocol }
+        container.override(\.taskService) { mockService as any TaskServiceProtocol }
+        container.override(\.appState) { mockState as any AppStateProtocol }
 
         let vm = TaskListViewModel()
         await vm.loadTasks()
@@ -38,8 +38,8 @@ struct TaskListViewModelTests {
         let initial = [TaskItem(title: "Old Task")]
         let mockService = MockTaskService(tasks: initial)
         let mockState = MockAppState()
-        container.override("taskService") { mockService as any TaskServiceProtocol }
-        container.override("appState") { mockState as any AppStateProtocol }
+        container.override(\.taskService) { mockService as any TaskServiceProtocol }
+        container.override(\.appState) { mockState as any AppStateProtocol }
 
         let vm = TaskListViewModel()
         await vm.loadTasks()
@@ -65,8 +65,8 @@ struct TaskListViewModelTests {
         let tasks = [TaskItem(title: "Test Task")]
         let mockService = MockTaskService(tasks: tasks)
         let mockState = MockAppState(count: 1)
-        container.override("taskService") { mockService as any TaskServiceProtocol }
-        container.override("appState") { mockState as any AppStateProtocol }
+        container.override(\.taskService) { mockService as any TaskServiceProtocol }
+        container.override(\.appState) { mockState as any AppStateProtocol }
 
         let vm = TaskListViewModel()
         await vm.loadTasks()
@@ -85,8 +85,8 @@ struct TaskListViewModelTests {
 
         let mockService = MockTaskService(shouldThrow: true)
         let mockState = MockAppState()
-        container.override("taskService") { mockService as any TaskServiceProtocol }
-        container.override("appState") { mockState as any AppStateProtocol }
+        container.override(\.taskService) { mockService as any TaskServiceProtocol }
+        container.override(\.appState) { mockState as any AppStateProtocol }
 
         let vm = TaskListViewModel()
         await vm.refreshTasks()

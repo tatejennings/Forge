@@ -18,7 +18,7 @@ func testLoginSuccess() async throws {
     let mock = MockAuthService(shouldSucceed: true)
 
     try await AuthContainer.shared.withOverrides {
-        $0.override("authService") { mock }
+        $0.override(\.authService) { mock }
     } run: {
         let viewModel = LoginViewModel()
         await viewModel.login(username: "user", password: "pass")
@@ -51,7 +51,7 @@ struct LoginViewModelTests {
         let mock = MockAuthService()
 
         try await AuthContainer.shared.withOverrides {
-            $0.override("authService") { mock }
+            $0.override(\.authService) { mock }
         } run: {
             let vm = LoginViewModel()
             await vm.login(username: "test", password: "pass")
@@ -71,7 +71,7 @@ directly:
 ```swift
 init() {
     AuthContainer.shared = AuthContainer()
-    AuthContainer.shared.override("authService") { MockAuthService() }
+    AuthContainer.shared.override(\.authService) { MockAuthService() }
 }
 ```
 
@@ -109,7 +109,7 @@ func testLoginSuccess() async throws {
     AuthContainer.shared = TestAuthContainer()
 
     try await AuthContainer.shared.withOverrides {
-        $0.override("authService") {
+        $0.override(\.authService) {
             MockAuthService(shouldSucceed: true)
         }
         // networkClient is unimplemented — if login accidentally
@@ -125,26 +125,11 @@ func testLoginSuccess() async throws {
 This makes test contracts explicit — you declare exactly which dependencies a test
 exercises. Anything else is a bug.
 
-## DEBUG Warnings for Typos
-
-In DEBUG builds, the container emits a runtime warning if an override key is registered
-but never accessed during the override scope:
-
-```
-[Forge] Warning: Override registered for 'authServce' but never accessed.
-Check for typos in the override key.
-```
-
-This catches common mistakes like misspelling the property name in the override key
-string.
-
 ## Best Practices
 
 - **Prefer `withOverrides`** — automatic cleanup prevents test state leakage
 - **Swap containers in suite `init()`** — gives each test a fresh starting point
 - **Use `unimplemented` for test containers** — makes dependency boundaries explicit
 - **Use `.serialized` on suites** that swap `shared` — prevents data races
-- **Override keys must match property names exactly** — the key defaults to `#function`,
-  which is the computed property name
 - **Use protocol return types** on container properties — this is what makes mocks
   substitutable for live implementations

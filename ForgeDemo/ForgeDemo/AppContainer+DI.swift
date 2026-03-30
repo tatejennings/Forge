@@ -70,11 +70,11 @@ extension AppContainer {
         let appState = app.appState
 
         // Wire TaskContainer with live dependencies from AppContainer
-        TaskContainer.shared.override("taskService") { taskService }
-        TaskContainer.shared.override("appState") { appState }
+        TaskContainer.shared.override(\.taskService) { taskService }
+        TaskContainer.shared.override(\.appState) { appState }
 
         // Wire SettingsContainer with live dependencies from AppContainer
-        SettingsContainer.shared.override("taskService") { taskService }
-        SettingsContainer.shared.override("appState") { appState }
+        SettingsContainer.shared.override(\.taskService) { taskService }
+        SettingsContainer.shared.override(\.appState) { appState }
     }
 }

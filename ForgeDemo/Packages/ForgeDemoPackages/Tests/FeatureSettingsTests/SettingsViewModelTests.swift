@@ -14,8 +14,8 @@ struct SettingsViewModelTests {
 
         let mockState = MockAppState()
         let mockService = MockTaskService()
-        container.override("appState") { mockState as any AppStateProtocol }
-        container.override("taskService") { mockService as any TaskServiceProtocol }
+        container.override(\.appState) { mockState as any AppStateProtocol }
+        container.override(\.taskService) { mockService as any TaskServiceProtocol }
 
         let vm = SettingsViewModel()
         vm.loadSettings()
@@ -36,8 +36,8 @@ struct SettingsViewModelTests {
 
         let mockService = MockTaskService(shouldThrow: true)
         let mockState = MockAppState()
-        container.override("taskService") { mockService as any TaskServiceProtocol }
-        container.override("appState") { mockState as any AppStateProtocol }
+        container.override(\.taskService) { mockService as any TaskServiceProtocol }
+        container.override(\.appState) { mockState as any AppStateProtocol }
 
         let vm = SettingsViewModel()
         await vm.clearCompleted()

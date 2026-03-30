@@ -182,7 +182,7 @@ func loginCallsService() async throws {
     let mock = MockAuthService(shouldSucceed: true)
 
     try await AppContainer.shared.withOverrides {
-        $0.override("authService") { mock }
+        $0.override(\.authService) { mock }
     } run: {
         let viewModel = LoginViewModel()
         await viewModel.login(username: "user", password: "pass")
@@ -257,7 +257,7 @@ The app target is the **composition root** — it's the only place that imports 
 // In your App's init()
 func wireContainers() {
     let app = AppContainer.shared
-    SearchContainer.shared.override("analytics") { app.analytics }
+    SearchContainer.shared.override(\.analytics) { app.analytics }
 }
 ```
 
@@ -313,8 +313,8 @@ var authService: AuthService {
 |--------|-------------|
 | [`provide(_:key:_:preview:)`](https://tatejennings.github.io/Forge/documentation/forge/container/provide(_:key:_:preview:)) | Register and resolve a dependency with scope and optional preview factory. |
 | [`withOverrides(_:run:)`](https://tatejennings.github.io/Forge/documentation/forge/container) | Apply overrides for the duration of a closure (sync and async variants). |
-| [`override(_:with:)`](https://tatejennings.github.io/Forge/documentation/forge/container/override(_:with:)) | Register a replacement factory for a key. |
-| [`removeOverride(for:)`](https://tatejennings.github.io/Forge/documentation/forge/container/removeoverride(for:)) | Remove a single override. |
+| [`override(_:with:)`](https://tatejennings.github.io/Forge/documentation/forge/container/override(_:with:)) | Register a KeyPath-based replacement factory. |
+| [`removeOverride(for:)`](https://tatejennings.github.io/Forge/documentation/forge/container/removeoverride(for:)) | Remove a single override by KeyPath. |
 | [`resetAll()`](https://tatejennings.github.io/Forge/documentation/forge/container/resetall()) | Remove all overrides and clear all cached/singleton values. |
 | [`resetCached()`](https://tatejennings.github.io/Forge/documentation/forge/container/resetcached()) | Clear cached-scope values only. Singletons and overrides are preserved. |
 

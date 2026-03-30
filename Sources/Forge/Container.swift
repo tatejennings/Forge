@@ -22,6 +22,8 @@
 /// - Note: All cache and override access is protected by an `NSRecursiveLock`,
 ///   making `Container` safe to use from multiple threads. The lock is recursive
 ///   because sibling dependency resolution re-enters ``provide(_:key:_:preview:)``.
+///   Override methods use KeyPath references for compile-time safety — the property
+///   name is extracted automatically from the KeyPath.
 ///
 /// ## Topics
 ///
@@ -46,11 +48,6 @@ open class Container: @unchecked Sendable {
     private var singletonCache: [String: Any] = [:]
     private var cachedCache: [String: Any] = [:]
     private var overrides: [String: @Sendable () -> Any] = [:]
-
-    #if DEBUG
-    private var registeredOverrideKeys: Set<String> = []
-    private var queriedOverrideKeys: Set<String> = []
-    #endif
 
     // MARK: - Initialization
 
@@ -96,12 +93,7 @@ open class Container: @unchecked Sendable {
         preview: (() -> Any)? = nil
     ) -> T {
         // 1. Check overrides first — overrides are never cached
-        if let overrideFactory = lock.withLock({
-            #if DEBUG
-            queriedOverrideKeys.insert(key)
-            #endif
-            return overrides[key]
-        }) {
+        if let overrideFactory = lock.withLock({ overrides[key] }) {
             let result = overrideFactory()
             if let value = result as? T {
                 return value
@@ -156,40 +148,30 @@ open class Container: @unchecked Sendable {
         }
     }
 
-    // MARK: - Testing / Overrides
+    // MARK: - Internal Override Storage Access
 
-    /// Registers overrides for the duration of a closure, then automatically restores
-    /// the previous state.
-    ///
-    /// Overrides registered via the builder take precedence over original factories
-    /// within the closure body. Cleanup is guaranteed even if the body throws.
-    ///
-    /// ```swift
-    /// container.withOverrides {
-    ///     $0.override("authService") { MockAuthService() }
-    /// } run: {
-    ///     let vm = LoginViewModel()
-    ///     // test assertions...
-    /// }
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - configure: A closure that registers overrides via an ``OverrideBuilder``.
-    ///   - body: The closure to execute with overrides active.
-    public func withOverrides(
-        _ configure: (inout OverrideBuilder) -> Void,
-        run body: () throws -> Void
+    // These methods expose the locked override storage to the `OverridableContainer`
+    // protocol extension, which provides the public KeyPath-based API.
+    // They are public because protocol requirements must match the conforming type's
+    // access level, but they are not intended for direct use — use the KeyPath-based
+    // methods (`override(_:with:)`, `removeOverride(for:)`, `withOverrides`) instead.
+
+    public func _storeOverride(key: String, factory: @escaping @Sendable () -> Any) {
+        lock.withLock { overrides[key] = factory }
+    }
+
+    public func _removeOverride(key: String) {
+        _ = lock.withLock { overrides.removeValue(forKey: key) }
+    }
+
+    public func _withOverrides(
+        factories: [String: @Sendable () -> Any],
+        body: () throws -> Void
     ) rethrows {
-        var builder = OverrideBuilder()
-        configure(&builder)
-
         let snapshot = lock.withLock {
             let saved = overrides
-            for (key, factory) in builder.factories {
+            for (key, factory) in factories {
                 overrides[key] = factory
-                #if DEBUG
-                registeredOverrideKeys.insert(key)
-                #endif
             }
             return saved
         }
@@ -198,29 +180,14 @@ open class Container: @unchecked Sendable {
         try body()
     }
 
-    /// Registers overrides for the duration of an async closure, then automatically
-    /// restores the previous state.
-    ///
-    /// This is the async variant of ``withOverrides(_:run:)-3qdpl``. Use it when your
-    /// test body contains `await` calls.
-    ///
-    /// - Parameters:
-    ///   - configure: A closure that registers overrides via an ``OverrideBuilder``.
-    ///   - body: The async closure to execute with overrides active.
-    public func withOverrides(
-        _ configure: (inout OverrideBuilder) -> Void,
-        run body: () async throws -> Void
+    public func _withOverridesAsync(
+        factories: [String: @Sendable () -> Any],
+        body: () async throws -> Void
     ) async rethrows {
-        var builder = OverrideBuilder()
-        configure(&builder)
-
         let snapshot = lock.withLock {
             let saved = overrides
-            for (key, factory) in builder.factories {
+            for (key, factory) in factories {
                 overrides[key] = factory
-                #if DEBUG
-                registeredOverrideKeys.insert(key)
-                #endif
             }
             return saved
         }
@@ -229,43 +196,13 @@ open class Container: @unchecked Sendable {
         try await body()
     }
 
-    /// Registers a replacement factory for a given key directly.
-    ///
-    /// Use this for `setUp`/`tearDown` patterns where the closure-based
-    /// ``withOverrides(_:run:)-3qdpl`` is impractical.
-    ///
-    /// - Parameters:
-    ///   - key: Must exactly match the computed property name on the container.
-    ///   - factory: A closure that produces the override value.
-    public func override<T>(_ key: String, with factory: @escaping @Sendable () -> T) {
-        lock.withLock {
-            overrides[key] = factory
-            #if DEBUG
-            registeredOverrideKeys.insert(key)
-            #endif
-        }
-    }
-
-    /// Removes a single override by key, restoring the original factory behavior.
-    public func removeOverride(for key: String) {
-        _ = lock.withLock {
-            overrides.removeValue(forKey: key)
-        }
-    }
+    // MARK: - Reset
 
     /// Removes all registered overrides and clears all cached and singleton values.
-    ///
-    /// In DEBUG builds, emits warnings for any override keys that were registered but
-    /// never accessed — this helps catch typos in override key strings.
     ///
     /// - SeeAlso: ``resetCached()`` to clear only cached-scope values.
     public func resetAll() {
         lock.withLock {
-            #if DEBUG
-            emitUnmatchedOverrideWarnings()
-            registeredOverrideKeys.removeAll()
-            queriedOverrideKeys.removeAll()
-            #endif
             overrides.removeAll()
             singletonCache.removeAll()
             cachedCache.removeAll()
@@ -288,21 +225,120 @@ open class Container: @unchecked Sendable {
 
     private func restoreOverrides(_ snapshot: [String: @Sendable () -> Any]) {
         lock.withLock {
-            #if DEBUG
-            emitUnmatchedOverrideWarnings()
-            registeredOverrideKeys.removeAll()
-            queriedOverrideKeys.removeAll()
-            #endif
             overrides = snapshot
         }
     }
+}
 
-    #if DEBUG
-    private func emitUnmatchedOverrideWarnings() {
-        let unmatched = registeredOverrideKeys.subtracting(queriedOverrideKeys)
-        for key in unmatched.sorted() {
-            print("[Forge] ⚠️ Override registered for '\(key)' but never accessed. Check for typos in the override key.")
+// MARK: - OverridableContainer Protocol
+
+/// Enables KeyPath-based override methods on ``Container`` subclasses.
+///
+/// You do not conform to this protocol directly — ``Container`` conforms automatically.
+/// The protocol extension provides the public ``override(_:with:)``,
+/// ``removeOverride(for:)``, and ``withOverrides(_:run:)-3qdpl`` methods that use
+/// KeyPath references for compile-time safety.
+///
+/// - Note: This protocol exists because Swift requires `Self` in parameter position
+///   to be defined in a protocol extension rather than directly on a class.
+public protocol OverridableContainer: Container {
+    func _storeOverride(key: String, factory: @escaping @Sendable () -> Any)
+    func _removeOverride(key: String)
+    func _withOverrides(factories: [String: @Sendable () -> Any], body: () throws -> Void) rethrows
+    func _withOverridesAsync(factories: [String: @Sendable () -> Any], body: () async throws -> Void) async rethrows
+}
+
+extension Container: OverridableContainer {}
+
+// MARK: - KeyPath-Based Override API
+
+extension OverridableContainer {
+
+    /// Overrides the dependency at the given KeyPath with the provided factory.
+    ///
+    /// Compile-time safe — the property must exist on the container and the
+    /// return type is inferred from the KeyPath. Works with Xcode rename refactoring.
+    ///
+    /// Use this for `setUp`/`tearDown` patterns where the closure-based
+    /// ``withOverrides(_:run:)-3qdpl`` is impractical.
+    ///
+    /// ```swift
+    /// AppContainer.shared.override(\.authService) { MockAuthService() }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - keyPath: A KeyPath to the container property to override.
+    ///   - factory: A closure that produces the override value.
+    public func override<T>(_ keyPath: KeyPath<Self, T>, with factory: @escaping @Sendable () -> T) {
+        guard let name = propertyName(from: keyPath) else {
+            assertionFailure(
+                "Forge: could not extract property name from \(keyPath). "
+                + "Override not registered. This is a Forge bug — please file an issue."
+            )
+            return
         }
+        _storeOverride(key: name, factory: factory)
     }
-    #endif
+
+    /// Removes the override registered for the given KeyPath.
+    /// The original factory behavior is restored on next resolution.
+    ///
+    /// ```swift
+    /// AppContainer.shared.removeOverride(for: \.authService)
+    /// ```
+    public func removeOverride<T>(for keyPath: KeyPath<Self, T>) {
+        guard let name = propertyName(from: keyPath) else {
+            assertionFailure(
+                "Forge: could not extract property name from \(keyPath). "
+                + "This is a Forge bug — please file an issue."
+            )
+            return
+        }
+        _removeOverride(key: name)
+    }
+
+    /// Registers overrides for the duration of a closure, then automatically restores
+    /// the previous state.
+    ///
+    /// Overrides registered via the builder take precedence over original factories
+    /// within the closure body. Cleanup is guaranteed even if the body throws.
+    ///
+    /// ```swift
+    /// container.withOverrides {
+    ///     $0.override(\.authService) { MockAuthService() }
+    /// } run: {
+    ///     let vm = LoginViewModel()
+    ///     // test assertions...
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - configure: A closure that registers overrides via an ``OverrideBuilder``.
+    ///   - body: The closure to execute with overrides active.
+    public func withOverrides(
+        _ configure: (inout OverrideBuilder<Self>) -> Void,
+        run body: () throws -> Void
+    ) rethrows {
+        var builder = OverrideBuilder<Self>()
+        configure(&builder)
+        try _withOverrides(factories: builder.factories, body: body)
+    }
+
+    /// Registers overrides for the duration of an async closure, then automatically
+    /// restores the previous state.
+    ///
+    /// This is the async variant of ``withOverrides(_:run:)-3qdpl``. Use it when your
+    /// test body contains `await` calls.
+    ///
+    /// - Parameters:
+    ///   - configure: A closure that registers overrides via an ``OverrideBuilder``.
+    ///   - body: The async closure to execute with overrides active.
+    public func withOverrides(
+        _ configure: (inout OverrideBuilder<Self>) -> Void,
+        run body: () async throws -> Void
+    ) async rethrows {
+        var builder = OverrideBuilder<Self>()
+        configure(&builder)
+        try await _withOverridesAsync(factories: builder.factories, body: body)
+    }
 }

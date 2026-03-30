@@ -8,7 +8,7 @@ struct OverrideTests {
     @Test("Override takes precedence over original factory")
     func overrideTakesPrecedence() {
         let container = TestContainer()
-        container.override("transientService") { SimpleService(id: "overridden") as any ServiceProtocol }
+        container.override(\.transientService) { SimpleService(id: "overridden") as any ServiceProtocol }
 
         let resolved = container.transientService
         #expect(resolved.id == "overridden")
@@ -18,7 +18,7 @@ struct OverrideTests {
     func overrideNotCached() {
         let container = TestContainer()
         let callCounter = Counter()
-        container.override("singletonService") {
+        container.override(\.singletonService) {
             let count = callCounter.increment()
             return SimpleService(id: "override-\(count)") as any ServiceProtocol
         }
@@ -35,12 +35,12 @@ struct OverrideTests {
         let container = TestContainer()
 
         let original = container.singletonService
-        container.override("singletonService") { SimpleService(id: "overridden") as any ServiceProtocol }
+        container.override(\.singletonService) { SimpleService(id: "overridden") as any ServiceProtocol }
 
         let overridden = container.singletonService
         #expect(overridden.id == "overridden")
 
-        container.removeOverride(for: "singletonService")
+        container.removeOverride(for: \.singletonService)
 
         // Should return the cached singleton from before the override
         let restored = container.singletonService
@@ -50,7 +50,7 @@ struct OverrideTests {
     @Test("resetAll removes all overrides")
     func resetAllRemovesOverrides() {
         let container = TestContainer()
-        container.override("transientService") { SimpleService(id: "overridden") as any ServiceProtocol }
+        container.override(\.transientService) { SimpleService(id: "overridden") as any ServiceProtocol }
 
         container.resetAll()
 
@@ -65,7 +65,7 @@ struct OverrideTests {
         _ = container.transientService.id
 
         container.withOverrides {
-            $0.override("transientService") { SimpleService(id: "scoped-override") as any ServiceProtocol }
+            $0.override(\.transientService) { SimpleService(id: "scoped-override") as any ServiceProtocol }
         } run: {
             let inside = container.transientService
             #expect(inside.id == "scoped-override")
@@ -82,7 +82,7 @@ struct OverrideTests {
         let container = TestContainer()
 
         try await container.withOverrides {
-            $0.override("transientService") { SimpleService(id: "async-override") as any ServiceProtocol }
+            $0.override(\.transientService) { SimpleService(id: "async-override") as any ServiceProtocol }
         } run: {
             // Perform an async operation to validate the async variant
             try await Task.sleep(for: .milliseconds(1))
@@ -102,7 +102,7 @@ struct OverrideTests {
 
         do {
             try container.withOverrides {
-                $0.override("transientService") { SimpleService(id: "will-throw") as any ServiceProtocol }
+                $0.override(\.transientService) { SimpleService(id: "will-throw") as any ServiceProtocol }
             } run: {
                 let inside = container.transientService
                 #expect(inside.id == "will-throw")

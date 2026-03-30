@@ -44,7 +44,7 @@ struct ContainerTests {
         var inject = ContainerInject(container, \.singletonService)
 
         // Override after creating the wrapper
-        container.override("singletonService") { SimpleService(id: "lazy-override") as any ServiceProtocol }
+        container.override(\.singletonService) { SimpleService(id: "lazy-override") as any ServiceProtocol }
 
         // Now access — should get the override because resolution is lazy
         let resolved = inject.wrappedValue
@@ -54,7 +54,7 @@ struct ContainerTests {
     @Test("@ContainerInject works with SharedContainer convenience init")
     func containerInjectSharedConvenience() {
         TestContainer.shared = TestContainer()
-        TestContainer.shared.override("transientService") { SimpleService(id: "shared-test") as any ServiceProtocol }
+        TestContainer.shared.override(\.transientService) { SimpleService(id: "shared-test") as any ServiceProtocol }
 
         var inject = ContainerInject<TestContainer, any ServiceProtocol>(\.transientService)
         let resolved = inject.wrappedValue
@@ -67,7 +67,7 @@ struct ContainerTests {
         let featureContainer = TestContainer()
 
         // Feature container proxies to core container via override
-        featureContainer.override("singletonService") { coreContainer.singletonService }
+        featureContainer.override(\.singletonService) { coreContainer.singletonService }
 
         let first = featureContainer.singletonService
         let second = featureContainer.singletonService

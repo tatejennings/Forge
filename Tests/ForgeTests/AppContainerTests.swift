@@ -43,7 +43,7 @@ struct AppContainerTests {
     @Test("Forge.defaultContainer set to a custom container — @Inject resolves from it")
     func customDefaultContainer() {
         let custom = TestContainer()
-        custom.override("singletonService") {
+        custom.override(\.singletonService) {
             SimpleService(id: "custom-container") as any ServiceProtocol
         }
 
@@ -76,7 +76,7 @@ struct AppContainerTests {
         let mock = SimpleService(id: "overridden")
 
         AppContainer.shared.withOverrides({
-            $0.override("testService") { mock as any ServiceProtocol }
+            $0.override(\.testService) { mock as any ServiceProtocol }
         }, run: {
             var inject = Inject<any ServiceProtocol>(\.testService)
             let resolved = inject.wrappedValue
@@ -112,7 +112,7 @@ struct AppContainerTests {
     @Test("AppContainer and a custom container coexist — each resolves independently")
     func containersCoexist() {
         let customContainer = TestContainer()
-        customContainer.override("singletonService") {
+        customContainer.override(\.singletonService) {
             SimpleService(id: "custom-singleton") as any ServiceProtocol
         }
 

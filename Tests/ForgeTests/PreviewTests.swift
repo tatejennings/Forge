@@ -60,7 +60,7 @@ struct PreviewTests {
         PreviewContext._isPreviewOverride = true
         let container = TestContainer()
 
-        container.override("previewableService") { SimpleService(id: "override-wins") as any ServiceProtocol }
+        container.override(\.previewableService) { SimpleService(id: "override-wins") as any ServiceProtocol }
 
         let resolved = container.previewableService
         #expect(resolved.id == "override-wins")

@@ -75,21 +75,21 @@ Use different overrides within `#Preview` blocks to show different states:
 
 ```swift
 #Preview("Logged In") {
-    AuthContainer.shared.override("authService") {
+    AuthContainer.shared.override(\.authService) {
         MockAuthService(isLoggedIn: true)
     }
     return ProfileView()
 }
 
 #Preview("Logged Out") {
-    AuthContainer.shared.override("authService") {
+    AuthContainer.shared.override(\.authService) {
         MockAuthService(isLoggedIn: false)
     }
     return ProfileView()
 }
 
 #Preview("Error State") {
-    AuthContainer.shared.override("authService") {
+    AuthContainer.shared.override(\.authService) {
         MockAuthService(shouldFail: true)
     }
     return ProfileView()
