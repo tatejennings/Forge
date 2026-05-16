@@ -1,0 +1,18 @@
+{
+  "name": "tatejennings-forge",
+  "owner": {
+    "name": "Tate Jennings",
+    "url": "https://github.com/tatejennings"
+  },
+  "description": "Claude Code plugin marketplace for the Forge Swift dependency injection framework",
+  "plugins": [
+    {
+      "name": "forge",
+      "source": "./plugins/forge",
+      "description": "Skills, slash commands, and subagents for the Forge Swift DI framework",
+      "version": "0.1.0",
+      "category": "language-support",
+      "keywords": ["swift", "dependency-injection", "di", "ios", "macos", "spm"]
+    }
+  ]
+}

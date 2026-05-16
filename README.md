@@ -320,6 +320,27 @@ var authService: AuthService {
 
 ---
 
+## Claude Code plugin
+
+This repo ships a Claude Code plugin that gives Claude built-in knowledge of Forge's conventions, plus scaffolding commands and a code-review/migration agent.
+
+```text
+/plugin marketplace add tatejennings/Forge
+/plugin install forge@tatejennings-forge
+```
+
+Includes:
+
+- **Skills** — `using-forge`, `forge-testing`, `forge-modular`, `forge-migration` activate automatically when you edit relevant code.
+- **Slash commands** — `/forge:init`, `/forge:new-container`, `/forge:add-dependency`, `/forge:wire-modules`.
+- **Subagents** — `forge-reviewer` audits a file or PR for anti-patterns; `forge-migrator` converts an existing app from Factory, manual init injection, or service-locator singletons.
+
+See [`plugins/forge/README.md`](plugins/forge/README.md) for details.
+
+Using Cursor, Aider, Codex CLI, or another agent tool? See [`AGENTS.md`](AGENTS.md) at the repo root for a condensed convention digest those tools pick up automatically.
+
+---
+
 ## Requirements
 
 | Requirement | Minimum |

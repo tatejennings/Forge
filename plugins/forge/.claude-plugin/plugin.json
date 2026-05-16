@@ -1,0 +1,13 @@
+{
+  "name": "forge",
+  "version": "0.1.0",
+  "description": "Skills, slash commands, and subagents for the Forge Swift dependency injection framework. Helps users adopt Forge, write tests with overrides, wire modular apps, and migrate from Factory or service-locator patterns.",
+  "author": {
+    "name": "Tate Jennings",
+    "url": "https://github.com/tatejennings"
+  },
+  "homepage": "https://github.com/tatejennings/Forge",
+  "repository": "https://github.com/tatejennings/Forge",
+  "license": "MIT",
+  "keywords": ["swift", "dependency-injection", "di", "ios", "macos", "spm", "forge"]
+}
