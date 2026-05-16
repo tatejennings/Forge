@@ -3,7 +3,7 @@
 Instructions for AI coding agents (Cursor, Aider, Codex CLI, Sourcegraph Cody, etc.) working in a Swift project that uses the [Forge](https://github.com/tatejennings/Forge) dependency injection framework.
 
 > Using Claude Code? Install the dedicated plugin for richer, context-aware support:
-> `/plugin marketplace add tatejennings/Forge` then `/plugin install forge@tatejennings-forge`.
+> `/plugin marketplace add tatejennings/Forge` then `/plugin install forge@forge-plugins`.
 
 ---
 

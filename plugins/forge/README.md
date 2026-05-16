@@ -6,7 +6,7 @@ Skills, slash commands, and subagents that help you adopt and use the [Forge](ht
 
 ```text
 /plugin marketplace add tatejennings/Forge
-/plugin install forge@tatejennings-forge
+/plugin install forge@forge-plugins
 ```
 
 ## What you get

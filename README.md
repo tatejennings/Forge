@@ -326,7 +326,7 @@ This repo ships a Claude Code plugin that gives Claude built-in knowledge of For
 
 ```text
 /plugin marketplace add tatejennings/Forge
-/plugin install forge@tatejennings-forge
+/plugin install forge@forge-plugins
 ```
 
 Includes:
