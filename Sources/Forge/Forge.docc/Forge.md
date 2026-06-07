@@ -1,6 +1,6 @@
 # ``Forge``
 
-A lightweight, compile-time safe dependency injection framework for Swift.
+A lightweight dependency injection framework for Swift — compile-time-safe at the call site, with loud, fail-fast runtime checks underneath.
 
 ## Overview
 

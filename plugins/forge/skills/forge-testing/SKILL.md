@@ -100,6 +100,7 @@ try await AppContainer.shared.withOverrides {
 
 - **Tests pass alone, fail in the suite** — almost always means a previous test mutated the container without cleanup. Switch to `withOverrides`, or call `resetAll()` in setUp.
 - **Mock not called** — the dependency's return type is concrete, not a protocol. The override isn't being substituted because the type doesn't match. Fix the registration in the container, not the test.
+- **Test crashes with "Override … returned … but expected …"** — an override factory returned the wrong type. Forge fires an `assertionFailure` on a type-mismatched override (debug/test builds) instead of silently running the real dependency. Fix the override's return type. (The KeyPath API — `override(\.x) { ... }` — normally catches this at compile time; raw/`Any`-typed overrides can still trip it at runtime.)
 - **Test sees a real network call** — the dependency wasn't overridden, OR the override is on the wrong container (e.g., overriding `AuthContainer.shared.x` but the code under test uses `AppContainer.shared.x`).
 
 ## Related skills

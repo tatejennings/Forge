@@ -34,5 +34,5 @@
 ///   a module-local `typealias Inject<T> = ContainerInject<YourContainer, T>`.
 ///   See <doc:ModularArchitecture>.
 public final class AppContainer: Container, SharedContainer, @unchecked Sendable {
-    nonisolated(unsafe) public static var shared = AppContainer()
+    public static let shared = AppContainer()
 }

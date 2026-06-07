@@ -34,7 +34,7 @@
 ///   - file: The file where `unimplemented` was called (auto-captured).
 ///   - line: The line where `unimplemented` was called (auto-captured).
 /// - Returns: Never returns — always calls `fatalError`.
-public func unimplemented<T>(_ name: String, file: StaticString = #file, line: UInt = #line) -> T {
+public func unimplemented<T>(_ name: String, file: StaticString = #fileID, line: UInt = #line) -> T {
     fatalError(
         "'\(name)' was called but is not implemented. Override this dependency before use.",
         file: file,

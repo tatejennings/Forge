@@ -5,7 +5,7 @@
 ///
 /// ```swift
 /// final class AppContainer: Container, SharedContainer {
-///     static var shared = AppContainer()
+///     static let shared = AppContainer()
 ///
 ///     var authService: any AuthServiceProtocol {
 ///         provide(.singleton) { AuthService() } preview: { MockAuthService() }
@@ -19,11 +19,17 @@
 /// - Important: Always use protocol return types on dependency properties
 ///   to enable mock substitution in tests and previews.
 ///
-/// - Note: All cache and override access is protected by an `NSRecursiveLock`,
-///   making `Container` safe to use from multiple threads. The lock is recursive
-///   because sibling dependency resolution re-enters ``provide(_:key:_:preview:)``.
-///   Override methods use KeyPath references for compile-time safety — the property
-///   name is extracted automatically from the KeyPath.
+/// - Note: All cache and override access is protected by a non-recursive lock,
+///   making `Container` safe to use from multiple threads. Factories are built
+///   *outside* the lock (double-checked locking), so sibling dependency resolution
+///   never re-enters it. Override methods use KeyPath references for compile-time
+///   safety — the property name is extracted automatically from the KeyPath.
+///
+/// - Note: `Container` is `@unchecked Sendable` — not because access is unsynchronized
+///   (it is fully serialized by the lock), but because Swift only permits *checked*
+///   `Sendable` conformance on `final` classes, and `Container` is `open` so it can be
+///   subclassed. The conformance is sound: every mutable field lives in the
+///   lock-guarded `State`.
 ///
 /// ## Topics
 ///
@@ -44,10 +50,15 @@ open class Container: @unchecked Sendable {
 
     // MARK: - Internal Storage
 
+    /// All mutable container state, guarded as a unit by ``lock``.
+    private struct State {
+        var singletonCache: [String: Any] = [:]
+        var cachedCache: [String: Any] = [:]
+        var overrides: [String: @Sendable () -> Any] = [:]
+    }
+
     private let lock = Lock()
-    private var singletonCache: [String: Any] = [:]
-    private var cachedCache: [String: Any] = [:]
-    private var overrides: [String: @Sendable () -> Any] = [:]
+    private var state = State()
 
     // MARK: - Initialization
 
@@ -81,8 +92,9 @@ open class Container: @unchecked Sendable {
     /// - Returns: The resolved dependency instance.
     ///
     /// - Note: Resolution follows a strict precedence order:
-    ///   1. **Overrides** — checked first; override type mismatches fall through with a
-    ///      DEBUG warning instead of crashing.
+    ///   1. **Overrides** — checked first. A type-mismatched override triggers an
+    ///      `assertionFailure` (crashing in debug/test builds so the mistake surfaces
+    ///      immediately) and, in release builds, falls through to the real factory.
     ///   2. **Preview factory** — used when running inside an Xcode preview and a
     ///      `preview` closure was provided. Preview values are never cached.
     ///   3. **Normal factory** — the default path for transient, singleton, and cached scopes.
@@ -93,14 +105,15 @@ open class Container: @unchecked Sendable {
         preview: (() -> Any)? = nil
     ) -> T {
         // 1. Check overrides first — overrides are never cached
-        if let overrideFactory = lock.withLock({ overrides[key] }) {
+        if let overrideFactory = lock.withLock({ state.overrides[key] }) {
             let result = overrideFactory()
             if let value = result as? T {
                 return value
             }
-            #if DEBUG
-            print("[Forge] ⚠️ Override for '\(key)' returned \(type(of: result)) but expected \(T.self). Falling through to factory.")
-            #endif
+            assertionFailure(
+                "[Forge] Override for '\(key)' returned \(type(of: result)) but expected \(T.self). "
+                + "Fix the override's return type. Falling through to the real factory."
+            )
         }
 
         // 2. Preview factory — never cached
@@ -126,26 +139,50 @@ open class Container: @unchecked Sendable {
     // MARK: - Scoped Resolution
 
     private func resolveScoped<T>(scope: Scope, key: String, factory: () -> Any) -> T {
-        // Note: Swift dictionaries are value types — concurrent read + write is UB.
-        // All cache access must be locked. The factory is called inside the lock
-        // to prevent duplicate instantiation.
-        return lock.withLock {
-            let cache = scope == .singleton ? singletonCache : cachedCache
-            if let cached = cache[key], let value = cached as? T {
-                return value
-            }
+        // Double-checked locking. Swift dictionaries are value types — concurrent
+        // read + write is UB — so every cache access is locked, but the factory runs
+        // *outside* the lock. Building outside the lock means a factory that resolves
+        // sibling dependencies never re-enters the lock, which is why the lock can be
+        // non-recursive.
+        //
+        // Trade-off: under a race two threads can both miss the cache and both build a
+        // value. The first store wins; the loser's instance is discarded
+        // (first-write-wins). Singleton/cached *identity* is still stable — every
+        // caller observes the same stored instance — but a side-effectful init may run
+        // more than once.
 
-            let result = factory()
-            guard let value = result as? T else {
-                fatalError("[Forge] Factory for '\(key)' returned \(type(of: result)) but expected \(T.self).")
+        // 1. Fast path: value already cached.
+        if let cached: T = lock.withLock({ cachedValue(scope: scope, key: key) }) {
+            return cached
+        }
+
+        // 2. Build outside the lock.
+        let result = factory()
+        guard let value = result as? T else {
+            fatalError("[Forge] Factory for '\(key)' returned \(type(of: result)) but expected \(T.self).")
+        }
+
+        // 3. Store under the lock, yielding to whoever stored first.
+        return lock.withLock {
+            if let existing: T = cachedValue(scope: scope, key: key) {
+                return existing
             }
-            if scope == .singleton {
-                singletonCache[key] = value
-            } else {
-                cachedCache[key] = value
+            switch scope {
+            case .singleton: state.singletonCache[key] = value
+            case .cached: state.cachedCache[key] = value
+            case .transient: break // handled in `provide`; never reached here
             }
             return value
         }
+    }
+
+    /// Reads the cached value for `key` in the given scope and casts it to `T`.
+    ///
+    /// - Important: The caller must already hold ``lock`` — this method touches
+    ///   ``state`` without locking.
+    private func cachedValue<T>(scope: Scope, key: String) -> T? {
+        let cache = scope == .singleton ? state.singletonCache : state.cachedCache
+        return cache[key] as? T
     }
 
     // MARK: - Internal Override Storage Access
@@ -157,11 +194,11 @@ open class Container: @unchecked Sendable {
     // methods (`override(_:with:)`, `removeOverride(for:)`, `withOverrides`) instead.
 
     public func _storeOverride(key: String, factory: @escaping @Sendable () -> Any) {
-        lock.withLock { overrides[key] = factory }
+        lock.withLock { state.overrides[key] = factory }
     }
 
     public func _removeOverride(key: String) {
-        _ = lock.withLock { overrides.removeValue(forKey: key) }
+        _ = lock.withLock { state.overrides.removeValue(forKey: key) }
     }
 
     public func _withOverrides(
@@ -169,9 +206,9 @@ open class Container: @unchecked Sendable {
         body: () throws -> Void
     ) rethrows {
         let snapshot = lock.withLock {
-            let saved = overrides
+            let saved = state.overrides
             for (key, factory) in factories {
-                overrides[key] = factory
+                state.overrides[key] = factory
             }
             return saved
         }
@@ -185,9 +222,9 @@ open class Container: @unchecked Sendable {
         body: () async throws -> Void
     ) async rethrows {
         let snapshot = lock.withLock {
-            let saved = overrides
+            let saved = state.overrides
             for (key, factory) in factories {
-                overrides[key] = factory
+                state.overrides[key] = factory
             }
             return saved
         }
@@ -203,9 +240,9 @@ open class Container: @unchecked Sendable {
     /// - SeeAlso: ``resetCached()`` to clear only cached-scope values.
     public func resetAll() {
         lock.withLock {
-            overrides.removeAll()
-            singletonCache.removeAll()
-            cachedCache.removeAll()
+            state.overrides.removeAll()
+            state.singletonCache.removeAll()
+            state.cachedCache.removeAll()
         }
     }
 
@@ -217,7 +254,7 @@ open class Container: @unchecked Sendable {
     /// - SeeAlso: ``resetAll()`` to clear everything including singletons and overrides.
     public func resetCached() {
         lock.withLock {
-            cachedCache.removeAll()
+            state.cachedCache.removeAll()
         }
     }
 
@@ -225,7 +262,7 @@ open class Container: @unchecked Sendable {
 
     private func restoreOverrides(_ snapshot: [String: @Sendable () -> Any]) {
         lock.withLock {
-            overrides = snapshot
+            state.overrides = snapshot
         }
     }
 }

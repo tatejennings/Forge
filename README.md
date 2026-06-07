@@ -5,7 +5,7 @@
 
 ![Forge](.github/forge_logo.png)
 
-A lightweight, compile-time safe dependency injection framework for Swift.
+A lightweight dependency injection framework for Swift — compile-time-safe at the call site, with loud, fail-fast runtime checks underneath.
 
 Forge makes dependency injection feel natural in Swift — minimal boilerplate, no magic, just clean code. Define a container, register dependencies as computed properties, and inject them with a single line. No code generation, no reflection, no third-party dependencies.
 
@@ -87,7 +87,7 @@ import Forge
 typealias Inject<T> = ContainerInject<AuthContainer, T>
 
 final class AuthContainer: Container, SharedContainer {
-    static var shared = AuthContainer()
+    static let shared = AuthContainer()
 
     var networkClient: any NetworkClientProtocol {
         provide(.singleton) { URLSessionNetworkClient() }
@@ -172,7 +172,7 @@ Every `#Preview` block will use the mock automatically. No setup required.
 
 ## Testing
 
-> Full guide: [Testing with Forge](https://tatejennings.github.io/Forge/documentation/forge/testingwithforge) — scoped overrides, container swap, `unimplemented`, and best practices.
+> Full guide: [Testing with Forge](https://tatejennings.github.io/Forge/documentation/forge/testingwithforge) — scoped overrides, container reset, `unimplemented`, and best practices.
 
 Use `withOverrides` to swap dependencies for the duration of a test. Cleanup is automatic — overrides are restored when the closure exits, even if it throws:
 
@@ -197,6 +197,21 @@ Need a completely fresh container with no cached singletons? Call `resetAll()`:
 ```swift
 AppContainer.shared.resetAll()
 ```
+
+> [!NOTE]
+> If an override returns the wrong type, Forge fires an `assertionFailure` — it
+> crashes loudly in debug/test builds so a mistyped mock surfaces immediately,
+> rather than silently running the real dependency. In release builds the call
+> falls through to the real factory.
+
+> [!NOTE]
+> **Known constraint.** Forge maps a `\.keyPath` override back to its registration
+> key by reading Swift's KeyPath string interpolation (see
+> `Sources/Forge/Internal/KeyPathName.swift`). This format has been stable from
+> Swift 5.10 through 6.2 but is *not* a documented language guarantee. The risk is
+> mitigated by a CI matrix that runs the test suite across every supported Swift
+> version before release; if a future toolchain ever changes the format, those
+> tests fail loudly rather than letting overrides silently mis-register.
 
 ---
 
@@ -238,7 +253,7 @@ Feature modules should never import other feature modules directly. Instead, dec
 ```swift
 // In SearchModule — depends on analytics, but doesn't import the analytics module
 final class SearchContainer: Container, SharedContainer {
-    static var shared = SearchContainer()
+    static let shared = SearchContainer()
 
     // Wired by the app target at startup via override
     var analytics: any AnalyticsProtocol {
@@ -301,7 +316,7 @@ var authService: AuthService {
 | [`Inject`](https://tatejennings.github.io/Forge/documentation/forge/inject) | Framework-provided typealias for `ContainerInject<AppContainer, T>`. Shadow it in modules with custom containers. |
 | [`Forge`](https://tatejennings.github.io/Forge/documentation/forge/forge-swift.forge) | Namespace enum. Access `Forge.defaultContainer` for programmatic resolution. |
 | [`Container`](https://tatejennings.github.io/Forge/documentation/forge/container) | Base class for dependency containers. Subclass and add computed properties. |
-| [`SharedContainer`](https://tatejennings.github.io/Forge/documentation/forge/sharedcontainer) | Protocol that adds a `static var shared` for convenient `@Inject` syntax. |
+| [`SharedContainer`](https://tatejennings.github.io/Forge/documentation/forge/sharedcontainer) | Protocol that adds a stable `static let shared` instance for convenient `@Inject` syntax. |
 | [`ContainerInject`](https://tatejennings.github.io/Forge/documentation/forge/containerinject) | Property wrapper for lazy dependency injection. Aliased as `@Inject` per module. |
 | [`Scope`](https://tatejennings.github.io/Forge/documentation/forge/scope) | Enum: `.transient`, `.singleton`, `.cached` |
 | [`OverrideBuilder`](https://tatejennings.github.io/Forge/documentation/forge/overridebuilder) | Accumulates overrides for `withOverrides` closures. |

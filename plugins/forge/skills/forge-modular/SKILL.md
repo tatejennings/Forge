@@ -18,7 +18,7 @@ import Forge
 typealias Inject<T> = ContainerInject<AuthContainer, T>
 
 final class AuthContainer: Container, SharedContainer {
-    static var shared = AuthContainer()
+    static let shared = AuthContainer()
 
     var authService: any AuthServiceProtocol {
         provide(.singleton) { AuthService(network: self.networkClient) }
@@ -39,7 +39,7 @@ When a feature module depends on something it can't construct (e.g., analytics, 
 ```swift
 // In FeatureSearch — depends on analytics, but FeatureSearch does NOT import FeatureAnalytics
 final class SearchContainer: Container, SharedContainer {
-    static var shared = SearchContainer()
+    static let shared = SearchContainer()
 
     // Wired by the app target at startup
     var analytics: any AnalyticsProtocol {

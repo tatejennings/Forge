@@ -47,7 +47,7 @@ Use the `using-forge` and `forge-modular` skills as the authoritative source for
      typealias Inject<T> = ContainerInject<<TargetName>Container, T>
 
      final class <TargetName>Container: Container, SharedContainer {
-         static var shared = <TargetName>Container()
+         static let shared = <TargetName>Container()
 
          // Add your dependencies here.
      }

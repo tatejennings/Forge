@@ -5,12 +5,15 @@
 ///
 /// ```swift
 /// final class AppContainer: Container, SharedContainer {
-///     static var shared = AppContainer()
+///     static let shared = AppContainer()
 /// }
 /// ```
 ///
-/// The `shared` property is declared `{ get set }` so tests can swap the
-/// container instance for a fresh one — see <doc:TestingWithForge> for details.
+/// The `shared` instance is stable for the lifetime of the process — declare it
+/// as a `let`. For test isolation, reset the shared container in place with
+/// ``Container/resetAll()`` or scope substitutions with
+/// ``OverridableContainer/withOverrides(_:run:)-3qdpl`` rather than swapping the
+/// instance — see <doc:TestingWithForge>.
 public protocol SharedContainer: AnyObject {
-    static var shared: Self { get set }
+    static var shared: Self { get }
 }

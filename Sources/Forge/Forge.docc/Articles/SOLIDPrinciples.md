@@ -24,7 +24,7 @@ too many responsibilities.
 ```swift
 // Correct: one container per module
 final class AuthContainer: Container, SharedContainer {
-    static var shared = AuthContainer()
+    static let shared = AuthContainer()
 
     var authService: any AuthServiceProtocol {
         provide(.singleton) { AuthService() }
@@ -32,7 +32,7 @@ final class AuthContainer: Container, SharedContainer {
 }
 
 final class AnalyticsContainer: Container, SharedContainer {
-    static var shared = AnalyticsContainer()
+    static let shared = AnalyticsContainer()
 
     var tracker: any AnalyticsTrackerProtocol {
         provide(.singleton) { MixpanelTracker() }
@@ -95,7 +95,7 @@ swapped in without changing consuming code.
 > Clients should not depend on interfaces they do not use.
 
 **In the framework:** ``SharedContainer`` is a minimal protocol with a single
-requirement (`static var shared`). ``Container`` does not conform to it by
+requirement (`static var shared { get }`, satisfied by a `static let`). ``Container`` does not conform to it by
 default — you opt in only when you need the zero-argument `@Inject` syntax.
 
 **In your code:** Define narrow protocols for each dependency. A

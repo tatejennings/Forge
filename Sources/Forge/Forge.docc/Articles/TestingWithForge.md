@@ -1,6 +1,6 @@
 # Testing with Forge
 
-Mock dependencies in tests using scoped overrides, container swap, and explicit test contracts.
+Mock dependencies in tests using scoped overrides, container reset, and explicit test contracts.
 
 ## Overview
 
@@ -33,17 +33,20 @@ Both sync and async variants are available:
 - ``Container/withOverrides(_:run:)-3qdpl`` — synchronous
 - ``Container/withOverrides(_:run:)-4eui2`` — async (use when your test body contains `await`)
 
-## Container Swap
+## Fresh State Between Tests
 
-For test suites where every test needs a completely fresh container, swap
-``SharedContainer/shared`` in the suite's `init`:
+``SharedContainer/shared`` is a stable `let` for the lifetime of the process — you
+don't (and can't) swap the instance. For test suites where every test needs a clean
+slate, reset the shared container in place with ``Container/resetAll()`` in the
+suite's `init`. `resetAll()` clears all cached singletons, cached values, and
+registered overrides:
 
 ```swift
 @Suite("LoginViewModel behavior", .serialized)
 struct LoginViewModelTests {
 
     init() {
-        AuthContainer.shared = AuthContainer()
+        AuthContainer.shared.resetAll()
     }
 
     @Test("Login calls the auth service")
@@ -61,7 +64,8 @@ struct LoginViewModelTests {
 }
 ```
 
-Each test gets a fresh container with no leftover state from previous tests.
+Each test gets a fresh starting point with no leftover state from previous tests.
+Mark such suites `.serialized` so the in-place resets don't race across tests.
 
 ## Direct Overrides (Escape Hatch)
 
@@ -70,7 +74,7 @@ directly:
 
 ```swift
 init() {
-    AuthContainer.shared = AuthContainer()
+    AuthContainer.shared.resetAll()
     AuthContainer.shared.override(\.authService) { MockAuthService() }
 }
 ```
@@ -101,14 +105,15 @@ final class TestAuthContainer: AuthContainer {
 }
 ```
 
-Then in your tests, swap to the test container and override only what you need:
+Then in your tests, build the test container as an instance, override only what you
+need, and resolve through it explicitly with ``ContainerInject``:
 
 ```swift
 @Test("Login success flow")
 func testLoginSuccess() async throws {
-    AuthContainer.shared = TestAuthContainer()
+    let container = TestAuthContainer()
 
-    try await AuthContainer.shared.withOverrides {
+    try await container.withOverrides {
         $0.override(\.authService) {
             MockAuthService(shouldSucceed: true)
         }
@@ -116,7 +121,8 @@ func testLoginSuccess() async throws {
         // calls it, the test fails loudly instead of silently
         // executing live code
     } run: {
-        let vm = LoginViewModel()
+        let authService = ContainerInject(container, \.authService).wrappedValue
+        let vm = LoginViewModel(authService: authService)
         await vm.login(username: "user", password: "pass")
     }
 }
@@ -125,11 +131,17 @@ func testLoginSuccess() async throws {
 This makes test contracts explicit — you declare exactly which dependencies a test
 exercises. Anything else is a bug.
 
+> Tip: If you want the zero-argument `@Inject(\.x)` to resolve from a test container
+> without threading it through initializers, declare that container's `shared` as a
+> `static var` (the ``SharedContainer`` requirement is only `{ get }`, so a `var`
+> satisfies it) and assign it in a `.serialized` suite's `init`. Forge permits this;
+> it just isn't the default — prefer the stable `let` plus ``Container/resetAll()``.
+
 ## Best Practices
 
 - **Prefer `withOverrides`** — automatic cleanup prevents test state leakage
-- **Swap containers in suite `init()`** — gives each test a fresh starting point
+- **Call `resetAll()` in suite `init()`** — gives each test a fresh starting point
 - **Use `unimplemented` for test containers** — makes dependency boundaries explicit
-- **Use `.serialized` on suites** that swap `shared` — prevents data races
+- **Use `.serialized` on suites** that reset or mutate `shared` — prevents data races
 - **Use protocol return types** on container properties — this is what makes mocks
   substitutable for live implementations

@@ -22,7 +22,7 @@ import CoreProtocols
 typealias Inject<T> = ContainerInject<AuthContainer, T>
 
 public final class AuthContainer: Container, SharedContainer {
-    public static var shared = AuthContainer()
+    public static let shared = AuthContainer()
 
     public var authService: any AuthServiceProtocol {
         provide(.singleton) {
@@ -61,7 +61,7 @@ wires the real implementation at startup via ``OverridableContainer/override(_:w
 import Forge
 
 public final class SearchContainer: Container, SharedContainer {
-    public static var shared = SearchContainer()
+    public static let shared = SearchContainer()
 
     // Wired by the app target — crashes if not overridden
     public var analytics: any AnalyticsProtocol {
@@ -109,10 +109,12 @@ class AppDelegate: UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        // Wire containers
-        AuthContainer.shared = AuthContainer()
-        SearchContainer.shared = SearchContainer()
-        CoreAnalyticsContainer.shared = CoreAnalyticsContainer()
+        // Wire each feature module's `unimplemented` proxies to the real
+        // cross-module implementations. Containers are stable `let` singletons —
+        // wire them with `override`, never by reassigning `shared`.
+        SearchContainer.shared.override(\.analytics) {
+            CoreAnalyticsContainer.shared.analytics
+        }
         return true
     }
 }

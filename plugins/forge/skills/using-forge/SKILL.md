@@ -51,7 +51,7 @@ For multi-module apps (see `forge-modular` skill for the full pattern):
 typealias Inject<T> = ContainerInject<AuthContainer, T>
 
 final class AuthContainer: Container, SharedContainer {
-    static var shared = AuthContainer()
+    static let shared = AuthContainer()
 
     var authService: any AuthServiceProtocol {
         provide(.singleton) { AuthService() }

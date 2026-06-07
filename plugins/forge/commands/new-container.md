@@ -28,7 +28,7 @@ Use the `forge-modular` skill for the authoritative pattern.
    typealias Inject<T> = ContainerInject<<ContainerName>, T>
 
    final class <ContainerName>: Container, SharedContainer {
-       static var shared = <ContainerName>()
+       static let shared = <ContainerName>()
 
        // Register dependencies here as computed properties.
        // Example:

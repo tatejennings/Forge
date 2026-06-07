@@ -5,7 +5,9 @@ import Testing
 struct AppContainerTests {
 
     init() {
-        AppContainer.shared = AppContainer()
+        // `AppContainer.shared` is a stable `let` — reset it in place between tests
+        // instead of swapping the instance.
+        AppContainer.shared.resetAll()
         Forge.defaultContainer = AppContainer.shared
     }
 
@@ -89,20 +91,20 @@ struct AppContainerTests {
         #expect(resolved.id == "app-container-live")
     }
 
-    // MARK: - Container swap pattern works on AppContainer.shared
+    // MARK: - resetAll() gives a fresh slate on AppContainer.shared
 
-    @Test("Container swap pattern works on AppContainer.shared in setUp/tearDown")
-    func containerSwapPattern() {
+    @Test("resetAll() between phases re-resolves AppContainer.shared singletons")
+    func resetAllReResolvesSingletons() {
         var inject1 = Inject<any ServiceProtocol>(\.testSingletonService)
         let first = inject1.wrappedValue
 
-        // Simulate tearDown + setUp
-        AppContainer.shared = AppContainer()
+        // Simulate tearDown + setUp on the stable shared instance.
+        AppContainer.shared.resetAll()
 
         var inject2 = Inject<any ServiceProtocol>(\.testSingletonService)
         let second = inject2.wrappedValue
 
-        // Fresh container produces a new singleton
+        // A fresh resolution still produces the fixture's fixed id.
         #expect(first.id == second.id) // both are "app-container-singleton" (fixed id)
         #expect(first.id == "app-container-singleton")
     }

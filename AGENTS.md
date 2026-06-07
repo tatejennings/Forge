@@ -9,7 +9,7 @@ Instructions for AI coding agents (Cursor, Aider, Codex CLI, Sourcegraph Cody, e
 
 ## What Forge is
 
-Forge is a lightweight, compile-time-safe DI framework for Swift. Registration is a computed property on a `Container` subclass; injection is a `@Inject(\.keyPath)` property wrapper. No code generation. No reflection. No build phases.
+Forge is a lightweight DI framework for Swift — compile-time-safe at the call site (KeyPaths + inferred types), with loud, fail-fast runtime checks underneath. Registration is a computed property on a `Container` subclass; injection is a `@Inject(\.keyPath)` property wrapper. No code generation. No reflection. No build phases.
 
 ```swift
 import Forge
@@ -108,7 +108,7 @@ For multi-module SPM workspaces, the pattern is:
    typealias Inject<T> = ContainerInject<AuthContainer, T>
 
    final class AuthContainer: Container, SharedContainer {
-       static var shared = AuthContainer()
+       static let shared = AuthContainer()
        var authService: any AuthServiceProtocol {
            provide(.singleton) { AuthService() }
        }
@@ -154,7 +154,7 @@ Forge is intentionally minimal. If a feature request implies one of these, sugge
 |---|---|
 | `AppContainer` | Built-in ready-to-use container. Extend it with your dependencies. |
 | `Container` | Base class. Subclass and add computed properties. |
-| `SharedContainer` | Protocol that adds a `static var shared`. |
+| `SharedContainer` | Protocol that adds a stable `static let shared` instance (requirement is `{ get }`). |
 | `@Inject(\.x)` | Property wrapper for lazy injection (classes only). |
 | `ContainerInject<C, T>` | Underlying type — aliased per module via `typealias Inject<T> = ContainerInject<MyContainer, T>`. |
 | `Scope` | Enum: `.transient`, `.singleton`, `.cached`. |
