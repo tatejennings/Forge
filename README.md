@@ -31,7 +31,7 @@ Add Forge to your project via Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/tatejennings/forge.git", from: "0.4.0")
+    .package(url: "https://github.com/tatejennings/forge.git", from: "0.5.0")
 ]
 ```
 
@@ -366,6 +366,21 @@ Using Cursor, Aider, Codex CLI, or another agent tool? See [`AGENTS.md`](AGENTS.
 | tvOS | 16.0 |
 | watchOS | 9.0 |
 | Xcode | 15.3 |
+
+---
+
+## Thread safety
+
+Containers are safe to resolve from any thread. All cache and override access is guarded by a
+recursive lock, and `.singleton` / `.cached` dependencies are built **exactly once** — even when
+multiple threads race to resolve the same dependency for the first time, the factory runs a single
+time and every caller observes the same instance. `Forge.defaultContainer` is likewise
+lock-synchronized, so it is safe to read or assign from any thread (though configuring it once at
+startup is still the recommended practice).
+
+Forge builds with **no concurrency warnings** under the Swift 6 language mode and complete strict
+concurrency. A dedicated CI job compiles the library with `-strict-concurrency=complete -swift-version 6`
+on every push, so this stays true across toolchain updates.
 
 ---
 

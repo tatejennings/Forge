@@ -20,7 +20,14 @@ let package = Package(
         .target(
             name: "Forge",
             path: "Sources/Forge",
-            exclude: ["Forge.docc"]
+            exclude: ["Forge.docc"],
+            swiftSettings: [
+                // Build Forge itself under complete strict concurrency so concurrency
+                // regressions surface locally, not just in the CI strict job. Keeping
+                // swift-tools-version at 5.10 means consumers on the 5.10 toolchain can
+                // still depend on Forge; this setting only affects Forge's own target.
+                .enableExperimentalFeature("StrictConcurrency"),
+            ]
         ),
         .testTarget(
             name: "ForgeTests",

@@ -22,4 +22,36 @@ final class TestContainer: Container, SharedContainer, @unchecked Sendable {
     var transientPreviewable: any ServiceProtocol {
         provide(.transient) { SimpleService(id: "live-transient") } preview: { SimpleService(id: "preview-transient") }
     }
+
+    // MARK: - Build-count instrumentation
+    //
+    // Each counting property's factory increments a per-instance counter every time it
+    // actually runs, so tests can assert how many times a factory was invoked — which
+    // is what pins the scope contracts (transient = every resolution, singleton/cached
+    // = exactly once) rather than just observing the returned identity.
+
+    let transientBuildCount = Counter()
+    let singletonBuildCount = Counter()
+    let cachedBuildCount = Counter()
+
+    var countedTransient: any ServiceProtocol {
+        provide(.transient) {
+            _ = self.transientBuildCount.increment()
+            return SimpleService()
+        }
+    }
+
+    var countedSingleton: any ServiceProtocol {
+        provide(.singleton) {
+            _ = self.singletonBuildCount.increment()
+            return SimpleService()
+        }
+    }
+
+    var countedCached: any ServiceProtocol {
+        provide(.cached) {
+            _ = self.cachedBuildCount.increment()
+            return SimpleService()
+        }
+    }
 }

@@ -46,3 +46,17 @@ jobs:
         run: swift build
       - name: Test
         run: swift test
+
+  # The matrix above builds in Swift 5 language mode (the package's tools-version),
+  # so it does not exercise strict-concurrency checking. This job compiles the target
+  # under the Swift 6 language mode with complete strict concurrency — the gate that
+  # keeps Forge's `@unchecked Sendable` and global-state claims honest.
+  strict-concurrency:
+    name: Strict concurrency (Swift 6 mode)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build under complete strict concurrency
+        run: swift build -Xswiftc -strict-concurrency=complete -Xswiftc -swift-version -Xswiftc 6

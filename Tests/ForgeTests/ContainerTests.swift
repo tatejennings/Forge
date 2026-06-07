@@ -21,6 +21,57 @@ struct ContainerTests {
         #expect(uniqueIds.count == 1, "Singleton should produce exactly one instance, got \(uniqueIds.count)")
     }
 
+    @Test("Thread safety: concurrent singleton resolution builds exactly once")
+    func concurrentSingletonBuildsExactlyOnce() {
+        let container = TestContainer()
+        let iterations = 1000
+        let collector = IDCollector()
+
+        DispatchQueue.concurrentPerform(iterations: iterations) { _ in
+            collector.append(container.countedSingleton.id)
+        }
+
+        // Identity is stable...
+        #expect(collector.uniqueIDs.count == 1)
+        // ...AND the factory ran exactly once, even under contention. This is the
+        // exactly-once guarantee: a side-effectful singleton init never runs twice.
+        #expect(
+            container.singletonBuildCount.value == 1,
+            "Singleton factory ran \(container.singletonBuildCount.value) times, expected 1"
+        )
+    }
+
+    @Test("Scope contract: transient factory runs on every resolution")
+    func transientFactoryRunsEveryResolution() {
+        let container = TestContainer()
+        let ids = (0..<5).map { _ in container.countedTransient.id }
+
+        #expect(container.transientBuildCount.value == 5)
+        #expect(Set(ids).count == 5, "Each transient resolution should be a fresh instance")
+    }
+
+    @Test("Scope contract: singleton factory runs exactly once")
+    func singletonFactoryRunsExactlyOnce() {
+        let container = TestContainer()
+        let ids = (0..<5).map { _ in container.countedSingleton.id }
+
+        #expect(container.singletonBuildCount.value == 1)
+        #expect(Set(ids).count == 1, "Every singleton resolution should be the same instance")
+    }
+
+    @Test("Scope contract: cached factory runs once, then again after resetCached()")
+    func cachedFactoryRebuildsAfterReset() {
+        let container = TestContainer()
+
+        _ = container.countedCached
+        _ = container.countedCached
+        #expect(container.cachedBuildCount.value == 1)
+
+        container.resetCached()
+        _ = container.countedCached
+        #expect(container.cachedBuildCount.value == 2, "resetCached() should force one rebuild")
+    }
+
     @Test("Container swap pattern works for test isolation")
     func containerSwapPattern() {
         // Simulate setUp

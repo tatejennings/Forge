@@ -19,11 +19,13 @@
 /// - Important: Always use protocol return types on dependency properties
 ///   to enable mock substitution in tests and previews.
 ///
-/// - Note: All cache and override access is protected by a non-recursive lock,
-///   making `Container` safe to use from multiple threads. Factories are built
-///   *outside* the lock (double-checked locking), so sibling dependency resolution
-///   never re-enters it. Override methods use KeyPath references for compile-time
-///   safety — the property name is extracted automatically from the KeyPath.
+/// - Note: All cache and override access is protected by a recursive lock,
+///   making `Container` safe to use from multiple threads. A dependency's factory
+///   runs *inside* the lock so that a `.singleton`/`.cached` value is built exactly
+///   once, even under concurrent first resolution; the lock is recursive because a
+///   factory may resolve sibling dependencies, re-entering ``provide(_:key:_:preview:)``.
+///   Override methods use KeyPath references for compile-time safety — the property
+///   name is extracted automatically from the KeyPath.
 ///
 /// - Note: `Container` is `@unchecked Sendable` — not because access is unsynchronized
 ///   (it is fully serialized by the lock), but because Swift only permits *checked*
@@ -139,33 +141,19 @@ open class Container: @unchecked Sendable {
     // MARK: - Scoped Resolution
 
     private func resolveScoped<T>(scope: Scope, key: String, factory: () -> Any) -> T {
-        // Double-checked locking. Swift dictionaries are value types — concurrent
-        // read + write is UB — so every cache access is locked, but the factory runs
-        // *outside* the lock. Building outside the lock means a factory that resolves
-        // sibling dependencies never re-enters the lock, which is why the lock can be
-        // non-recursive.
-        //
-        // Trade-off: under a race two threads can both miss the cache and both build a
-        // value. The first store wins; the loser's instance is discarded
-        // (first-write-wins). Singleton/cached *identity* is still stable — every
-        // caller observes the same stored instance — but a side-effectful init may run
-        // more than once.
+        // Swift dictionaries are value types — concurrent read + write is UB — so every
+        // cache access is locked. The factory runs *inside* the lock so that a
+        // `.singleton`/`.cached` value is built exactly once: a second thread blocks
+        // until the first has finished building and storing. The lock is recursive
+        // because a factory may resolve sibling dependencies, re-entering `provide`.
+        lock.withLock {
+            if let cached: T = cachedValue(scope: scope, key: key) {
+                return cached
+            }
 
-        // 1. Fast path: value already cached.
-        if let cached: T = lock.withLock({ cachedValue(scope: scope, key: key) }) {
-            return cached
-        }
-
-        // 2. Build outside the lock.
-        let result = factory()
-        guard let value = result as? T else {
-            fatalError("[Forge] Factory for '\(key)' returned \(type(of: result)) but expected \(T.self).")
-        }
-
-        // 3. Store under the lock, yielding to whoever stored first.
-        return lock.withLock {
-            if let existing: T = cachedValue(scope: scope, key: key) {
-                return existing
+            let result = factory()
+            guard let value = result as? T else {
+                fatalError("[Forge] Factory for '\(key)' returned \(type(of: result)) but expected \(T.self).")
             }
             switch scope {
             case .singleton: state.singletonCache[key] = value

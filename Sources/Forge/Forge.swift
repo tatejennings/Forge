@@ -11,8 +11,10 @@
 /// Forge.defaultContainer = MyCustomContainer.shared
 /// ```
 ///
-/// > Important: Set ``defaultContainer`` on the main thread before any background
-///   work begins. Mutation after startup is not thread-safe.
+/// > Tip: Configure ``defaultContainer`` once at startup, before resolving any
+///   dependencies. Reads and writes are synchronized, so it is safe to access from
+///   any thread, but reassigning it mid-flight can change which container a later
+///   `@Inject` resolves from.
 public enum Forge {
 
     /// The default container used by the framework.
@@ -26,6 +28,16 @@ public enum Forge {
     /// Forge.defaultContainer = MyCustomContainer.shared
     /// ```
     ///
-    /// - Note: Must be set on the main thread before any background work begins.
-    public static var defaultContainer: Container? = AppContainer.shared
+    /// - Note: Access is synchronized by an internal lock, so reading and writing
+    ///   from multiple threads is safe. Prefer configuring it once at startup.
+    public static var defaultContainer: Container? {
+        get { lock.withLock { _defaultContainer } }
+        set { lock.withLock { _defaultContainer = newValue } }
+    }
+
+    /// Backing storage for ``defaultContainer``. Guarded by ``lock`` — never touch
+    /// it directly. `nonisolated(unsafe)` is sound because every access goes through
+    /// the lock.
+    private nonisolated(unsafe) static var _defaultContainer: Container? = AppContainer.shared
+    private static let lock = Lock()
 }
