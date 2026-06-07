@@ -115,7 +115,42 @@ final class LoginViewModel {
 }
 ```
 
-> **Note:** `@Inject` uses a `mutating get` for lazy resolution, which works in classes (ViewModels, services). In SwiftUI Views, use `@State` with direct container resolution instead: `@State private var viewModel = AppContainer.shared.myViewModel`
+### Use it in a SwiftUI View
+
+`@Inject` resolves through a `mutating get`, which works in **classes** (ViewModels, services) but not in SwiftUI's **`View` structs** — SwiftUI re-creates Views constantly and treats their stored properties as immutable. So in a View, register the ViewModel on your container and resolve it once into `@State`:
+
+```swift
+import SwiftUI
+import Forge
+
+// 1. Register the ViewModel on your container
+extension AppContainer {
+    var loginViewModel: LoginViewModel {
+        provide(.cached) { LoginViewModel() }
+    }
+}
+
+// 2. Resolve it once into @State — SwiftUI owns it from there
+struct LoginView: View {
+    @State private var viewModel = AppContainer.shared.loginViewModel
+
+    @State private var username = ""
+    @State private var password = ""
+
+    var body: some View {
+        Form {
+            TextField("Username", text: $username)
+            SecureField("Password", text: $password)
+
+            Button("Log In") {
+                Task { await viewModel.login(username: username, password: password) }
+            }
+        }
+    }
+}
+```
+
+The View never touches `authService` — it depends only on its ViewModel, and the ViewModel resolves its own dependencies via `@Inject`. Registering with `.cached` keeps the same instance alive as SwiftUI re-evaluates the struct; use `.transient` for a view model that should start fresh on each presentation (e.g. an "add item" sheet). Add a `preview:` factory to the ViewModel's dependencies and `#Preview { LoginView() }` runs entirely on mocks — see [Xcode Preview Support](#xcode-preview-support).
 
 That's it. No registration ceremony, no service locator, no runtime errors.
 
