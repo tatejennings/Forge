@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5D15CCE12FD621EA009C3E78 /* Forge in Frameworks */ = {isa = PBXBuildFile; productRef = 5D15CCE02FD621EA009C3E78 /* Forge */; };
 		5DEA761C2F772AB1003946FE /* Forge in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA761B2F772AB1003946FE /* Forge */; };
 		5DEA76232F774DEB003946FE /* CoreInfrastructure in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76222F774DEB003946FE /* CoreInfrastructure */; };
 		5DEA76252F774DEB003946FE /* CoreModels in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76242F774DEB003946FE /* CoreModels */; };
@@ -67,6 +68,7 @@
 				5DEA76292F774DEB003946FE /* FeatureSettings in Frameworks */,
 				5DEA76232F774DEB003946FE /* CoreInfrastructure in Frameworks */,
 				5DEA761C2F772AB1003946FE /* Forge in Frameworks */,
+				5D15CCE12FD621EA009C3E78 /* Forge in Frameworks */,
 				5DEA76272F774DEB003946FE /* CoreNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -135,6 +137,7 @@
 				5DEA76262F774DEB003946FE /* CoreNetworking */,
 				5DEA76282F774DEB003946FE /* FeatureSettings */,
 				5DEA762A2F774DEB003946FE /* FeatureTasks */,
+				5D15CCE02FD621EA009C3E78 /* Forge */,
 			);
 			productName = ForgeDemo;
 			productReference = 5DEA75EE2F772A53003946FE /* ForgeDemo.app */;
@@ -219,6 +222,7 @@
 			mainGroup = 5DEA75E52F772A53003946FE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				5D15CCDF2FD621EA009C3E78 /* XCLocalSwiftPackageReference "../../Forge" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5DEA75EF2F772A53003946FE /* Products */;
@@ -596,7 +600,18 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		5D15CCDF2FD621EA009C3E78 /* XCLocalSwiftPackageReference "../../Forge" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../Forge;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		5D15CCE02FD621EA009C3E78 /* Forge */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Forge;
+		};
 		5DEA761B2F772AB1003946FE /* Forge */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Forge;
