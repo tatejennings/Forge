@@ -150,7 +150,7 @@ struct LoginView: View {
 }
 ```
 
-The View never touches `authService` — it depends only on its ViewModel, and the ViewModel resolves its own dependencies via `@Inject`. Registering with `.cached` keeps the same instance alive as SwiftUI re-evaluates the struct; use `.transient` for a view model that should start fresh on each presentation (e.g. an "add item" sheet). Add a `preview:` factory to the ViewModel's dependencies and `#Preview { LoginView() }` runs entirely on mocks — see [Xcode Preview Support](#xcode-preview-support).
+The View never touches `authService` — it depends only on its ViewModel, and the ViewModel resolves its own dependencies via `@Inject`. Note that `loginViewModel` is registered with a **concrete** return type, not a protocol: you substitute a ViewModel's *dependencies* in tests, not the ViewModel itself, so the [protocol-return-type rule](#best-practices) applies to injected services — view models are the exception. Registering with `.cached` keeps the same instance alive as SwiftUI re-evaluates the struct; use `.transient` for a view model that should start fresh on each presentation (e.g. an "add item" sheet). Add a `preview:` factory to the ViewModel's dependencies and `#Preview { LoginView() }` runs entirely on mocks — see [Xcode Preview Support](#xcode-preview-support).
 
 That's it. No registration ceremony, no service locator, no runtime errors.
 
