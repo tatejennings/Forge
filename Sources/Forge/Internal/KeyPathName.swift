@@ -10,7 +10,10 @@
 // 4. If the format becomes unpredictable, revert to string-based public API
 //
 // CI must run KeyPath name extraction tests across all supported Swift versions
-// before every release.
+// before every release. These tests run on macOS only: the property-name format
+// this function reads is a Darwin behavior. Linux toolchains interpolate a computed
+// KeyPath as "<computed 0x… (Type)>" with no name, so this function cannot work
+// there — which is consistent with Forge supporting Apple platforms only.
 
 /// Extracts the leaf property name from a KeyPath using its string interpolation.
 ///

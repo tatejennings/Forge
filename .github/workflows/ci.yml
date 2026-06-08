@@ -15,9 +15,18 @@ jobs:
   # interpolation format (see Sources/Forge/Internal/KeyPathName.swift), which is
   # NOT a documented language guarantee. This matrix is the safeguard that comment
   # relies on: it must catch any version where KeyPath name extraction breaks.
-  test-linux:
+  #
+  # Runs on macOS, not Linux: Forge supports Apple platforms only (see the
+  # Requirements table in README.md), and the KeyPath name format the override
+  # system reads is a *Darwin* behavior. Linux toolchains interpolate a computed
+  # KeyPath as "<computed 0x… (Type)>" with no property name, so the override
+  # tests cannot pass there — and no supported Forge user ships to Linux. We use
+  # swift-actions/setup-swift (which installs swift.org Darwin toolchains) so the
+  # matrix can cover every supported Swift version regardless of which Xcode the
+  # runner image bundles.
+  test-apple:
     name: Test (Swift ${{ matrix.swift }})
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
@@ -34,9 +43,11 @@ jobs:
       - name: Test
         run: swift test
 
-  # Build + test on the primary Apple platform with the latest toolchain.
+  # Build + test with the runner's default Xcode toolchain — the compiler most
+  # developers actually use, as opposed to the swift.org toolchains the matrix
+  # above installs.
   test-macos:
-    name: Test (macOS)
+    name: Test (macOS, default Xcode)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
