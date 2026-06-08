@@ -29,6 +29,11 @@ jobs:
   # can build against: an older swift.org toolchain cannot parse a much newer
   # SDK's module map, so Swift 5.10 runs on macos-14 (MacOSX14 SDK) while the
   # 6.x toolchains run on macos-15. Bump these pairs as runner images change.
+  #
+  # Swift 5.10 is build-only: it is Forge's advertised minimum and the library
+  # source must compile under it, but the test suite uses Swift Testing
+  # (`import Testing`), which ships only with Swift 6.0+. The KeyPath-name
+  # safeguard therefore runs the full suite on 6.0/6.1/6.2.
   test-apple:
     name: Test (Swift ${{ matrix.swift }})
     runs-on: ${{ matrix.os }}
@@ -36,10 +41,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { swift: "5.10", os: macos-14 }
-          - { swift: "6.0", os: macos-15 }
-          - { swift: "6.1", os: macos-15 }
-          - { swift: "6.2", os: macos-15 }
+          - { swift: "5.10", os: macos-14, test: false }
+          - { swift: "6.0", os: macos-15, test: true }
+          - { swift: "6.1", os: macos-15, test: true }
+          - { swift: "6.2", os: macos-15, test: true }
     steps:
       - uses: actions/checkout@v4
       - uses: swift-actions/setup-swift@v2
@@ -50,6 +55,7 @@ jobs:
       - name: Build
         run: swift build
       - name: Test
+        if: matrix.test
         run: swift test
 
   # Build + test with the runner's default Xcode toolchain — the compiler most
