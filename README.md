@@ -244,9 +244,11 @@ AppContainer.shared.resetAll()
 > key by reading Swift's KeyPath string interpolation (see
 > `Sources/Forge/Internal/KeyPathName.swift`). This format has been stable from
 > Swift 5.10 through 6.2 but is *not* a documented language guarantee. The risk is
-> mitigated by a CI matrix that runs the test suite across every supported Swift
-> version before release; if a future toolchain ever changes the format, those
-> tests fail loudly rather than letting overrides silently mis-register.
+> mitigated by a CI matrix on macOS (Forge's supported platforms are all Darwin):
+> the override test suite runs on Swift 6.0 through 6.2 — the versions that bundle
+> Swift Testing — and Swift 5.10 is compile-verified. If a future Apple toolchain
+> ever changes the format, those tests fail loudly rather than letting overrides
+> silently mis-register.
 
 ---
 
@@ -412,6 +414,11 @@ multiple threads race to resolve the same dependency for the first time, the fac
 time and every caller observes the same instance. `Forge.defaultContainer` is likewise
 lock-synchronized, so it is safe to read or assign from any thread (though configuring it once at
 startup is still the recommended practice).
+
+Forge synchronizes the *cache*, not your *values*: it does not require resolved dependencies to be
+`Sendable`. A `.singleton` or `.cached` instance shared across threads must be safe to use
+concurrently on its own. This is deliberate — requiring `Sendable` would make it impossible to
+register `@MainActor`-isolated dependencies such as cached view models.
 
 Forge builds with **no concurrency warnings** under the Swift 6 language mode and complete strict
 concurrency. A dedicated CI job compiles the library with `-strict-concurrency=complete -swift-version 6`

@@ -27,6 +27,11 @@
 ///   Override methods use KeyPath references for compile-time safety — the property
 ///   name is extracted automatically from the KeyPath.
 ///
+///   The lock synchronizes the *cache*, not your *values*: resolved dependencies are
+///   not `Sendable`-checked, so a `.singleton`/`.cached` instance shared across threads
+///   must be thread-safe on its own. This is deliberate — requiring `Sendable` would
+///   prevent registering `@MainActor`-isolated dependencies such as cached view models.
+///
 /// - Note: `Container` is `@unchecked Sendable` — not because access is unsynchronized
 ///   (it is fully serialized by the lock), but because Swift only permits *checked*
 ///   `Sendable` conformance on `final` classes, and `Container` is `open` so it can be
@@ -114,7 +119,7 @@ open class Container: @unchecked Sendable {
             }
             assertionFailure(
                 "[Forge] Override for '\(key)' returned \(type(of: result)) but expected \(T.self). "
-                + "Fix the override's return type. Falling through to the real factory."
+                + "Fix the override's return type. Release builds fall through to the real factory."
             )
         }
 
