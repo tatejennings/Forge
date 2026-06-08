@@ -24,13 +24,22 @@ jobs:
   # swift-actions/setup-swift (which installs swift.org Darwin toolchains) so the
   # matrix can cover every supported Swift version regardless of which Xcode the
   # runner image bundles.
+  #
+  # Each Swift version is pinned to a runner image whose macOS SDK that compiler
+  # can build against: an older swift.org toolchain cannot parse a much newer
+  # SDK's module map, so Swift 5.10 runs on macos-14 (MacOSX14 SDK) while the
+  # 6.x toolchains run on macos-15. Bump these pairs as runner images change.
   test-apple:
     name: Test (Swift ${{ matrix.swift }})
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        swift: ["5.10", "6.0", "6.1", "6.2"]
+        include:
+          - { swift: "5.10", os: macos-14 }
+          - { swift: "6.0", os: macos-15 }
+          - { swift: "6.1", os: macos-15 }
+          - { swift: "6.2", os: macos-15 }
     steps:
       - uses: actions/checkout@v4
       - uses: swift-actions/setup-swift@v2
