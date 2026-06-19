@@ -15,22 +15,27 @@ Use the `forge-modular` skill as the authoritative source for the pattern.
 
 2. **Find the app target's composition root.**
    - Look for a file with `@main` and `App` conformance (SwiftUI) OR `@UIApplicationMain`/`AppDelegate` (UIKit).
-   - The composition root is either inside `init()` of the `App` struct, or in `applicationDidFinishLaunching`, or in a dedicated `wireContainers()` function nearby.
-   - If no obvious composition root exists, create a new file `<AppTarget>/DI/Composition.swift` with a `wireContainers()` function, and invoke it from the app's init / launch path.
+   - The composition root is a standalone `wireContainers()` function (NOT a method on `AppContainer`), invoked from `App.init()` / `applicationDidFinishLaunching`.
+   - If no obvious composition root exists, create a new file `<AppTarget>/CompositionRoot.swift` with a top-level `func wireContainers()`, and invoke it from the app's init / launch path.
 
-3. **Discover the source container.**
-   - The source is usually `AppContainer.shared`. If the workspace has a different "root" container (a container that imports all feature modules and registers the real implementations), prefer that one.
+3. **Discover the source container** (where the real implementations live).
+   - Prefer the module container that owns each real (e.g. a Core/services module's
+     own container). `AppContainer` is only the source for genuine *target-level*
+     services the app itself owns; a thin modular app may not use `AppContainer` at all.
+   - If multiple containers supply reals, resolve each proxy from its true owner.
 
 4. **Generate the wiring lines.**
    - For each `(ContainerName, propertyName, expectedSource)`, generate:
      ```swift
      <ContainerName>.shared.override(\.<propertyName>) { source.<propertyName> }
      ```
-   - `source` is the app-level container variable, e.g. `let app = AppContainer.shared`.
-   - If the source container does NOT have a property matching `<propertyName>`:
+   - `source` is the owning module container that supplies the real, e.g.
+     `let infra = InfrastructureContainer.shared` (or `AppContainer.shared` only if the
+     app target itself owns the service).
+   - If no source container has a property matching `<propertyName>`:
      - Look for fuzzy matches (e.g. `analyticsService` vs `analytics`).
      - If found, generate with the matched name and emit a `// NOTE:` comment recording the name mismatch so the user can confirm.
-     - If not found, emit a `// TODO(forge): register \(propertyName) on AppContainer` comment so the user can supply it.
+     - If not found, emit a `// TODO(forge): supply \(propertyName) from its owning module container` comment so the user can wire it.
 
 5. **Insert the wiring idempotently.**
    - If a wiring line for the same `(Container, property)` already exists in the composition root, skip it.

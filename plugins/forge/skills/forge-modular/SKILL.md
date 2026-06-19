@@ -61,34 +61,53 @@ Notice:
 
 ## Composition root — the app target wires everything
 
-The app target is the ONLY place that imports both modules. It overrides each cross-module proxy with the real implementation:
+Put the wiring in a **dedicated `CompositionRoot.swift`** in the app target — a
+standalone `wireContainers()` function, **not** a method on `AppContainer`. It's the
+only place that imports every module, and it's the only thing `App.init()` calls. It
+reads each real service from the module container that owns it and `override`s the
+matching `unimplemented()` proxy on each feature container:
 
 ```swift
-// In MyApp (the app target)
+// CompositionRoot.swift  (app target)
+import Forge
+import CoreServices      // owns the real implementations in its own container
 import FeatureAuth
 import FeatureSearch
-import FeatureAnalytics
 
+// MARK: - Target-level services (OPTIONAL)
+// Only if the app target itself owns dependencies that live in no module. Drop this
+// whole section in a thin app target — then AppContainer never appears.
+//
+//   extension AppContainer {
+//       var someAppService: any SomeProtocol { provide(.singleton) { SomeService() } }
+//   }
+
+// MARK: - Composition root — wire feature proxies once, at launch
+func wireContainers() {
+    let analytics = ServicesContainer.shared.analytics   // real impl, owned by its module
+    SearchContainer.shared.override(\.analytics) { analytics }
+    AuthContainer.shared.override(\.analytics)   { analytics }
+}
+```
+```swift
 @main
 struct MyApp: App {
-    init() {
-        wireContainers()
-    }
-
+    init() { wireContainers() }            // the only call site
     var body: some Scene { ... }
-}
-
-private func wireContainers() {
-    let app = AppContainer.shared  // or wherever the canonical analytics lives
-    SearchContainer.shared.override(\.analytics) { app.analytics }
-    AuthContainer.shared.override(\.analytics) { app.analytics }
 }
 ```
 
-This pattern keeps each feature module:
-- Independently buildable (no cross-feature imports)
-- Independently testable (override the proxy with a mock)
-- Independently previewable (the `preview:` factory handles it)
+Key rules:
+- **Wiring is a standalone function, never a method on `AppContainer`.** Bolting it
+  onto `AppContainer` makes the composition root read like the Simple path.
+- **`AppContainer` is optional.** Reals belong in the module that owns them (a Core
+  service module's own container). Use `AppContainer` only for genuine *target-level*
+  services the app itself owns — a thin app target never touches it.
+- **Wire from the owning container**, resolving the real once and capturing it (or
+  read it through with `{ owner.x }`). Overrides are read-through and never cached.
+
+This keeps each feature module independently buildable (no cross-feature imports),
+testable (override the proxy with a mock), and previewable (the `preview:` factory).
 
 ## Consuming a module container from the app target
 

@@ -128,13 +128,21 @@ For multi-module SPM workspaces, the pattern is:
 
 2. **Cross-module deps use `unimplemented` proxies** — feature modules declare the dep but don't import the implementation module.
 
-3. **App target wires real implementations at launch** (composition root):
+3. **App target wires real implementations at launch** from a dedicated
+   `CompositionRoot.swift` — a standalone `wireContainers()` function (NOT a method on
+   `AppContainer`), called once from `App.init()`. Read each real from the module
+   container that owns it:
    ```swift
+   // CompositionRoot.swift (app target)
    func wireContainers() {
-       let app = AppContainer.shared
-       SearchContainer.shared.override(\.analytics) { app.analytics }
+       let analytics = CoreAnalyticsContainer.shared.analytics  // owned by its module
+       SearchContainer.shared.override(\.analytics) { analytics }
    }
    ```
+   `AppContainer` is **optional** in a modular app — reals live in their owning module's
+   container, so a thin app target never extends `AppContainer`. Use it only for genuine
+   target-level services the app itself owns (register them in the same file under a
+   `// MARK: - Target-level services` section).
 
 Protocols live in a small `*Protocols` module that everyone can import without pulling in implementations.
 

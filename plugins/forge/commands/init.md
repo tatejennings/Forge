@@ -41,18 +41,35 @@ Use the `using-forge` and `forge-modular` skills as the authoritative source for
          // }
      }
      ```
-   - **Modular style:** create `<TargetDir>/DI/<TargetName>Container.swift` with:
+   - **Modular style:** create `<ModuleDir>/<ModuleName>Container.swift` with:
      ```swift
      import Forge
 
-     typealias Inject<T> = ContainerInject<<TargetName>Container, T>
+     typealias Inject<T> = ContainerInject<<ModuleName>Container, T>
 
-     final class <TargetName>Container: Container, SharedContainer {
-         static let shared = <TargetName>Container()
+     final class <ModuleName>Container: Container, SharedContainer {
+         static let shared = <ModuleName>Container()
 
          // Add your dependencies here.
      }
      ```
+     AND scaffold the app target's composition root `<AppTarget>/CompositionRoot.swift`:
+     ```swift
+     import Forge
+     // import your feature + service modules
+
+     // MARK: - Target-level services (OPTIONAL — only if the app target owns any)
+     // extension AppContainer { /* register here */ }
+
+     // MARK: - Composition root — call once from App.init()
+     func wireContainers() {
+         // Wire each feature container's `unimplemented()` proxy to the real impl
+         // owned by its module container, e.g.:
+         // FeatureContainer.shared.override(\.x) { ServicesContainer.shared.x }
+     }
+     ```
+     Note `AppContainer` is optional in a modular app — a thin app target whose modules
+     own everything never extends it.
    - Match the target's existing folder conventions if there's an obvious DI / Dependencies folder. Otherwise create a `DI/` folder.
 
 5. **Report what you did.**

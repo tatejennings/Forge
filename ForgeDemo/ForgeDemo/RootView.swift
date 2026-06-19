@@ -1,11 +1,12 @@
 import SwiftUI
 import Forge
 import CoreModels
+import CoreInfrastructure
 import FeatureTasks
 import FeatureSettings
 
 struct RootView: View {
-    private let appState = AppContainer.shared.appState
+    private let appState = InfrastructureContainer.shared.appState
 
     var body: some View {
         TabView {

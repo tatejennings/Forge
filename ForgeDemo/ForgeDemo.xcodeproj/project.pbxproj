@@ -34,10 +34,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5D479BB52FE5BE9B00872076 /* CoreInfrastructure */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CoreInfrastructure; sourceTree = "<group>"; };
+		5D479BB62FE5BE9B00872076 /* CoreModels */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CoreModels; sourceTree = "<group>"; };
+		5D479BB72FE5BE9B00872076 /* CoreNetworking */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CoreNetworking; sourceTree = "<group>"; };
+		5D479BB82FE5BE9B00872076 /* FeatureSettings */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FeatureSettings; sourceTree = "<group>"; };
+		5D479BB92FE5BE9B00872076 /* FeatureTasks */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FeatureTasks; sourceTree = "<group>"; };
 		5DEA75EE2F772A53003946FE /* ForgeDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForgeDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA75FD2F772A54003946FE /* ForgeDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA76072F772A55003946FE /* ForgeDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		5DECF8722F77BF070005ED3D /* ForgeDemoPackages */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = ForgeDemoPackages; path = Packages/ForgeDemoPackages; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -90,11 +94,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5D479BBA2FE5BE9B00872076 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				5D479BB52FE5BE9B00872076 /* CoreInfrastructure */,
+				5D479BB62FE5BE9B00872076 /* CoreModels */,
+				5D479BB72FE5BE9B00872076 /* CoreNetworking */,
+				5D479BB82FE5BE9B00872076 /* FeatureSettings */,
+				5D479BB92FE5BE9B00872076 /* FeatureTasks */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
 		5DEA75E52F772A53003946FE = {
 			isa = PBXGroup;
 			children = (
+				5D479BBA2FE5BE9B00872076 /* Packages */,
 				5DEA75F02F772A53003946FE /* ForgeDemo */,
-				5DECF8722F77BF070005ED3D /* ForgeDemoPackages */,
 				5DEA76002F772A54003946FE /* ForgeDemoTests */,
 				5DEA760A2F772A55003946FE /* ForgeDemoUITests */,
 				5DEA75EF2F772A53003946FE /* Products */,

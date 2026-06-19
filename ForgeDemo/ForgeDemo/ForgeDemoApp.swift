@@ -5,7 +5,7 @@ import Forge
 struct ForgeDemoApp: App {
 
     init() {
-        AppContainer.wireContainers()
+        wireContainers()
     }
 
     var body: some Scene {

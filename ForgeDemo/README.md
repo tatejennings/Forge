@@ -1,9 +1,10 @@
 # ForgeDemo — the Modular reference app
 
-ForgeDemo is the canonical example of Forge's **Modular** path: a multi-module
-Swift Package Manager app with **one container per feature module**, cross-module
-`unimplemented()` proxies, and a **composition root** in the app target that wires
-the real implementations in at launch.
+ForgeDemo is the canonical example of Forge's **Modular** path: a multi-package
+Swift app where **each module is its own SPM package**, every module owns its
+dependencies in its **own container**, cross-module dependencies are
+`unimplemented()` **proxies**, and a thin **composition root** in the app target
+wires the real implementations in at launch.
 
 > Looking for the **Simple** (single-target, extend-`AppContainer`) path? It needs
 > no demo — see the
@@ -13,27 +14,47 @@ the real implementations in at launch.
 
 ## How to tell this is the Modular path
 
-The app target extends `AppContainer`, which on its own *looks* like the Simple
-path. What makes ForgeDemo Modular is everything around that:
+- **One package per module** — each has its own `Package.swift` and only declares
+  the dependencies it actually uses, so boundaries are enforced by the build.
+- **Per-module containers** with `SharedContainer` conformance. Feature modules add a
+  local `typealias Inject<T> = ContainerInject<XContainer, T>`; provider modules
+  (Core*) just register services.
+- **`unimplemented()` proxies** for dependencies a feature module declares but cannot
+  construct itself.
+- **A thin composition root** — a standalone `wireContainers()` in
+  `CompositionRoot.swift` that `override`s each proxy with the real implementation
+  owned by a Core module's container. **The app target owns no dependencies and never
+  extends `AppContainer`.**
 
-- **Per-module containers** with a module-local `typealias Inject<T> =
-  ContainerInject<XContainer, T>` and `SharedContainer` conformance.
-- **`unimplemented()` proxies** for dependencies a feature module declares but
-  cannot construct.
-- **A composition root** (`wireContainers()`) that `override`s each proxy with a
-  live implementation.
+A Simple app has none of these — no per-module packages, no feature containers, no
+`unimplemented()`, no `wireContainers()`.
 
-A Simple app has none of these — no feature containers, no `unimplemented()`, no
-`wireContainers()`.
+## Layout
 
-## File map
+```
+ForgeDemo/
+├── ForgeDemo/                      # app target (thin)
+│   ├── CompositionRoot.swift       # wireContainers() — wires proxies; AppContainer placeholder (commented)
+│   ├── ForgeDemoApp.swift          # @main; init() { wireContainers() }
+│   └── RootView.swift
+└── Packages/                       # one package per module
+    ├── CoreModels/                 # protocols + models + mocks. No Forge.
+    ├── CoreNetworking/             # NetworkingContainer { httpClient, remoteTaskService }
+    ├── CoreInfrastructure/         # InfrastructureContainer { persistence, taskService, appState }; depends on CoreNetworking
+    ├── FeatureTasks/               # TaskContainer (proxies: taskService, appState)
+    └── FeatureSettings/            # SettingsContainer (proxies: taskService, appState)
+```
 
-| File | Role |
-|---|---|
-| `ForgeDemo/AppContainer+DI.swift` | **App-target composition root.** Registers the live implementations on `AppContainer` and `wireContainers()` injects them into the feature containers. |
-| `Packages/ForgeDemoPackages/Sources/FeatureTasks/TaskContainer.swift` | **Per-module container** for the Tasks feature. Cross-module deps are `unimplemented()` proxies. |
-| `Packages/ForgeDemoPackages/Sources/FeatureSettings/SettingsContainer.swift` | **Per-module container** for the Settings feature. |
-| `Packages/ForgeDemoPackages/Sources/Core*` | Protocol/model/networking/infrastructure modules — no Forge dependency; safe for any module to import. |
+## How wiring flows
+
+1. `CoreNetworking` / `CoreInfrastructure` own the **real** services in their own
+   containers (`InfrastructureContainer.taskService` reads `remoteTaskService` from
+   `NetworkingContainer` — an allowed downward Core → Core dependency).
+2. `FeatureTasks` / `FeatureSettings` declare `taskService` / `appState` as
+   `unimplemented()` proxies.
+3. The app target's `wireContainers()` resolves the reals from
+   `InfrastructureContainer.shared` and `override`s the feature proxies — once, at
+   launch. The app target itself registers nothing.
 
 ## See also
 

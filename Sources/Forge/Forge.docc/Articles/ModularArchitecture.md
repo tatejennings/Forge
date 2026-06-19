@@ -95,30 +95,50 @@ silently running on mock data.
 ## The Composition Root
 
 The app target is the **composition root** — the only place where all modules are
-imported and containers are wired together:
+imported and containers are wired together. Put the wiring in a dedicated
+`CompositionRoot.swift` as a **standalone `wireContainers()` function** (not a method
+on ``AppContainer``), and call it once from `App.init()`:
 
 ```swift
-// App/Sources/AppDelegate.swift
+// App/Sources/CompositionRoot.swift
 
+import Forge
 import FeatureAuth
 import FeatureSearch
 import CoreAnalytics
 
-class AppDelegate: UIApplicationDelegate {
-    func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-    ) -> Bool {
-        // Wire each feature module's `unimplemented` proxies to the real
-        // cross-module implementations. Containers are stable `let` singletons —
-        // wire them with `override`, never by reassigning `shared`.
-        SearchContainer.shared.override(\.analytics) {
-            CoreAnalyticsContainer.shared.analytics
-        }
-        return true
-    }
+// MARK: - Target-level services (OPTIONAL)
+// Only if the app target itself owns dependencies that live in no module. A thin app
+// target omits this entirely — then `AppContainer` never appears.
+//
+//   extension AppContainer {
+//       var someAppService: any SomeProtocol { provide(.singleton) { SomeService() } }
+//   }
+
+// MARK: - Composition root — wire feature proxies once, at launch
+func wireContainers() {
+    // Wire each feature module's `unimplemented` proxy to the real implementation,
+    // read from the module container that owns it. Containers are stable singletons —
+    // wire with `override`, never by reassigning `shared`.
+    let analytics = CoreAnalyticsContainer.shared.analytics
+    SearchContainer.shared.override(\.analytics) { analytics }
 }
 ```
+```swift
+// App/Sources/MyApp.swift
+@main
+struct MyApp: App {
+    init() { wireContainers() }
+    var body: some Scene { WindowGroup { RootView() } }
+}
+```
+
+> Important: The real implementations live in the module that owns them (here,
+> `CoreAnalytics`'s own container) — not on ``AppContainer``. ``AppContainer`` is
+> **optional** in a modular app: use it only for genuine *target-level* services the
+> app itself owns. A thin app target whose modules own everything never touches it.
+> And keep the wiring a free function — making it a method on ``AppContainer`` makes
+> the composition root read like the Simple path.
 
 ## Consuming a Module Container from the App Target
 
