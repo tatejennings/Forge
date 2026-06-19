@@ -138,6 +138,18 @@ For multi-module SPM workspaces, the pattern is:
 
 Protocols live in a small `*Protocols` module that everyone can import without pulling in implementations.
 
+### Consuming a module container from the app target
+
+A module's local `Inject` typealias is internal to that module, so at the app target the bare `@Inject(\.x)` resolves only from `AppContainer`. To use a feature container's dependency from app-target code, don't fall back to `SomeContainer.shared.x` — use the property wrapper's explicit-container form (fully type-inferred):
+
+```swift
+final class RootCoordinator {
+    @ContainerInject(TaskContainer.shared, \.taskService) private var taskService
+}
+```
+
+For repeated use, declare a per-container typealias at the app target: `typealias TasksInject<T> = ContainerInject<TaskContainer, T>`. This is not a layering violation — the app target already imports every module. Bare `@Inject` stays single-container by design (cross-container resolution would be a service locator); prefer registering app-level needs on `AppContainer`.
+
 ## Common mistakes to avoid
 
 - **Concrete return type on `provide`** — breaks override / mock substitution.

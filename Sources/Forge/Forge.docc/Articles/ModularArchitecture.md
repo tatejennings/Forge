@@ -120,6 +120,44 @@ class AppDelegate: UIApplicationDelegate {
 }
 ```
 
+## Consuming a Module Container from the App Target
+
+Inside a feature module, `@Inject(\.x)` works because the module's local
+``Inject`` typealias (`typealias Inject<T> = ContainerInject<XContainer, T>`) is in
+scope. That typealias is internal to the module, so **at the app target the bare
+`@Inject(\.x)` resolves only from ``AppContainer``** — it cannot reach a feature
+container.
+
+You do not need `SomeContainer.shared.dependency` to bridge that gap. Use
+``ContainerInject``'s explicit-container initializer, which is fully type-inferred:
+
+```swift
+// App target — e.g. an app-level coordinator that needs a feature's service
+final class RootCoordinator {
+    @ContainerInject(TaskContainer.shared, \.taskService) private var taskService
+}
+```
+
+For repeated use, declare a per-container typealias at the app target, mirroring the
+in-module idiom:
+
+```swift
+typealias TasksInject<T> = ContainerInject<TaskContainer, T>
+
+@TasksInject(\.taskService) private var taskService
+```
+
+Both forms give the same lazy resolution, caching, and override-awareness as the
+bare ``Inject``. This is **not** a layering violation — the app target is the
+composition root and already imports every module.
+
+> Note: The bare ``Inject`` is intentionally bound to a single container. Resolving
+> `@Inject(\.x)` across containers would require runtime cross-container lookup
+> (a service locator), which Forge does not do — the fixed-container typealias is
+> what makes resolution compile-time-safe. Prefer registering app-level needs on
+> ``AppContainer``; reach into a feature container only when the app genuinely needs
+> something that feature owns.
+
 ## Import Dependency Graph
 
 The correct architecture follows this pattern:

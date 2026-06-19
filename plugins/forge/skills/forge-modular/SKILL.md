@@ -90,6 +90,45 @@ This pattern keeps each feature module:
 - Independently testable (override the proxy with a mock)
 - Independently previewable (the `preview:` factory handles it)
 
+## Consuming a module container from the app target
+
+Inside a feature module, `@Inject(\.x)` works because the module's local `typealias
+Inject<T> = ContainerInject<XContainer, T>` is in scope. That typealias is internal
+to the module, so **at the app target the bare `@Inject(\.x)` resolves only from
+`AppContainer`** — it can't reach a feature container. You don't need
+`SomeContainer.shared.dependency` to bridge that gap; use the property wrapper's
+explicit-container form, which is fully type-inferred:
+
+```swift
+// App target — e.g. an app-level coordinator that needs a feature's service
+final class RootCoordinator {
+    @ContainerInject(TaskContainer.shared, \.taskService) private var taskService
+}
+```
+
+For repeated use, define a per-container typealias at the app target (mirrors the
+in-module idiom):
+
+```swift
+typealias TasksInject<T> = ContainerInject<TaskContainer, T>
+
+@TasksInject(\.taskService) private var taskService
+```
+
+Both give the same lazy resolution, caching, and override-awareness as bare
+`@Inject`. This is **not** a layering violation — the app target is the composition
+root and already imports every module.
+
+Guidance:
+- **Bare `@Inject` is intentionally single-container.** Making `@Inject(\.x)`
+  resolve across containers would require runtime cross-container lookup (a service
+  locator), which Forge deliberately does not do. Don't try to add it — use the
+  explicit-container form above.
+- **Prefer `AppContainer` for app-level needs.** Reaching into a feature container
+  from the composition root is fine occasionally. If app code consumes *many*
+  feature internals, promote that dependency to `AppContainer` or a core module
+  instead.
+
 ## Protocol modules
 
 For the pattern to work, protocols must live in a module both the producer and consumer can import. Common shape:
