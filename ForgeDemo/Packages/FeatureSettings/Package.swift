@@ -10,6 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../CoreModels"),
+        .package(path: "../DesignSystem"),
         .package(path: "../../../"),
     ],
     targets: [
@@ -17,6 +18,7 @@ let package = Package(
             name: "FeatureSettings",
             dependencies: [
                 "CoreModels",
+                "DesignSystem",
                 .product(name: "Forge", package: "Forge"),
             ]
         ),

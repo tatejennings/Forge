@@ -16,6 +16,7 @@
 		5DEA762B2F774DEB003946FE /* FeatureTasks in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA762A2F774DEB003946FE /* FeatureTasks */; };
 		5DAA00010000000000000001 /* CoreLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 5DAA00010000000000000002 /* CoreLogger */; };
 		5DAA00010000000000000004 /* FeatureFlags in Frameworks */ = {isa = PBXBuildFile; productRef = 5DAA00010000000000000005 /* FeatureFlags */; };
+		5DAA00020000000000000001 /* DesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 5DAA00020000000000000002 /* DesignSystem */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +44,7 @@
 		5D479BB92FE5BE9B00872076 /* FeatureTasks */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FeatureTasks; sourceTree = "<group>"; };
 		5DAA00010000000000000003 /* CoreLogger */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CoreLogger; sourceTree = "<group>"; };
 		5DAA00010000000000000006 /* FeatureFlags */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FeatureFlags; sourceTree = "<group>"; };
+		5DAA00020000000000000003 /* DesignSystem */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DesignSystem; sourceTree = "<group>"; };
 		5DEA75EE2F772A53003946FE /* ForgeDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForgeDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA75FD2F772A54003946FE /* ForgeDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA76072F772A55003946FE /* ForgeDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -77,6 +79,7 @@
 				5DEA76232F774DEB003946FE /* CoreInfrastructure in Frameworks */,
 				5DAA00010000000000000001 /* CoreLogger in Frameworks */,
 				5DAA00010000000000000004 /* FeatureFlags in Frameworks */,
+				5DAA00020000000000000001 /* DesignSystem in Frameworks */,
 				5DEA761C2F772AB1003946FE /* Forge in Frameworks */,
 				5D15CCE12FD621EA009C3E78 /* Forge in Frameworks */,
 				5DEA76272F774DEB003946FE /* CoreNetworking in Frameworks */,
@@ -106,6 +109,7 @@
 				5D479BB52FE5BE9B00872076 /* CoreInfrastructure */,
 				5DAA00010000000000000003 /* CoreLogger */,
 				5D479BB62FE5BE9B00872076 /* CoreModels */,
+				5DAA00020000000000000003 /* DesignSystem */,
 				5D479BB72FE5BE9B00872076 /* CoreNetworking */,
 				5DAA00010000000000000006 /* FeatureFlags */,
 				5D479BB82FE5BE9B00872076 /* FeatureSettings */,
@@ -159,6 +163,7 @@
 				5DEA76222F774DEB003946FE /* CoreInfrastructure */,
 				5DAA00010000000000000002 /* CoreLogger */,
 				5DEA76242F774DEB003946FE /* CoreModels */,
+				5DAA00020000000000000002 /* DesignSystem */,
 				5DEA76262F774DEB003946FE /* CoreNetworking */,
 				5DAA00010000000000000005 /* FeatureFlags */,
 				5DEA76282F774DEB003946FE /* FeatureSettings */,
@@ -669,6 +674,10 @@
 		5DAA00010000000000000005 /* FeatureFlags */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FeatureFlags;
+		};
+		5DAA00020000000000000002 /* DesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DesignSystem;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

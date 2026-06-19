@@ -2,6 +2,7 @@ import SwiftUI
 import Forge
 import CoreModels
 import CoreInfrastructure
+import DesignSystem
 import FeatureTasks
 import FeatureSettings
 
@@ -10,15 +11,17 @@ struct RootView: View {
 
     var body: some View {
         TabView {
-            Tab("Tasks", systemImage: "checkmark.circle") {
+            Tab("Tasks", systemImage: "checklist") {
                 TaskListView()
             }
             .badge(appState.incompletedTaskCount > 0 ? appState.incompletedTaskCount : 0)
 
-            Tab("Settings", systemImage: "gear") {
+            Tab("Settings", systemImage: "gearshape") {
                 SettingsView()
             }
         }
+        // Accent means state/action only — here, the active tab.
+        .tint(.dsAccent)
     }
 }
 

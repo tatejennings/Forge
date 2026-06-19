@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreModels
+import DesignSystem
 
 public struct TaskListView: View {
     @State private var viewModel = TaskContainer.shared.taskListViewModel
@@ -18,14 +19,15 @@ public struct TaskListView: View {
                 .navigationTitle("ForgeDemo")
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
+                        filterMenu
+                    }
+                    ToolbarItem(placement: .primaryAction) {
                         Button {
                             showingAddTask = true
                         } label: {
-                            Image(systemName: "plus")
+                            DSIconCircleLabel(systemName: "plus")
                         }
-                    }
-                    ToolbarItem(placement: .secondaryAction) {
-                        filterPicker
+                        .accessibilityLabel("Add task")
                     }
                 }
                 .sheet(isPresented: $showingAddTask) {
@@ -58,6 +60,7 @@ public struct TaskListView: View {
                     Text(viewModel.errorMessage ?? "")
                 }
         }
+        .tint(.dsAccent)
     }
 
     // Pull-to-refresh is gated behind the `.pullToRefresh` flag, so the gesture disappears
@@ -65,30 +68,45 @@ public struct TaskListView: View {
     @ViewBuilder
     private var content: some View {
         if flags.isEnabled(.pullToRefresh) {
-            mainContent.refreshable { await viewModel.refreshTasks() }
+            stateContent.refreshable { await viewModel.refreshTasks() }
         } else {
-            mainContent
+            stateContent
         }
     }
 
     @ViewBuilder
-    private var mainContent: some View {
+    private var stateContent: some View {
         if viewModel.isLoading {
-            ProgressView("Loading tasks…")
+            loadingView
         } else {
             taskList
+                // Error state: list dims behind the system "Error" alert.
+                .opacity(viewModel.errorMessage != nil ? 0.45 : 1)
         }
     }
 
+    private var loadingView: some View {
+        VStack(spacing: DSSpacing.md) {
+            ProgressView()
+                .tint(.dsAccent)
+            Text("Loading tasks…")
+                .font(.dsSubheadline)
+                .foregroundStyle(Color.dsInk2)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.dsBackground.ignoresSafeArea())
+    }
+
     private var taskList: some View {
-        List {
+        let list = List {
             if viewModel.filteredTasks.isEmpty {
-                ContentUnavailableView(
-                    "No Tasks",
-                    systemImage: "checkmark.circle",
-                    description: Text("Pull down to sync from the server, or tap + to add one.")
+                DSEmptyState(
+                    title: "No Tasks",
+                    message: "Pull down to sync from the server, or tap + to add one."
                 )
+                .padding(.top, DSSpacing.xxl)
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             } else {
                 ForEach(viewModel.filteredTasks) { task in
                     NavigationLink {
@@ -100,6 +118,7 @@ public struct TaskListView: View {
                             Task { await viewModel.toggleTask(id: task.id) }
                         }
                     }
+                    .listRowBackground(Color.dsCard)
                 }
                 .onDelete { indexSet in
                     let ids = indexSet.map { viewModel.filteredTasks[$0].id }
@@ -113,18 +132,29 @@ public struct TaskListView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.dsBackground.ignoresSafeArea())
+        #if os(iOS)
+        return list.listStyle(.insetGrouped)
+        #else
+        return list
+        #endif
     }
 
-    private var filterPicker: some View {
-        Picker("Filter", selection: Binding(
-            get: { appState.activeFilter },
-            set: { appState.activeFilter = $0 }
-        )) {
-            ForEach(TaskStatus.allCases, id: \.self) { status in
-                Text(status.rawValue.capitalized).tag(status)
+    private var filterMenu: some View {
+        Menu {
+            Picker("Filter", selection: Binding(
+                get: { appState.activeFilter },
+                set: { appState.activeFilter = $0 }
+            )) {
+                ForEach(TaskStatus.allCases, id: \.self) { status in
+                    Text(status.rawValue.capitalized).tag(status)
+                }
             }
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease.circle")
         }
-        .pickerStyle(.menu)
+        .accessibilityLabel("Filter tasks")
     }
 }
 

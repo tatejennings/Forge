@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreModels
+import DesignSystem
 
 public struct TaskDetailView: View {
     let task: TaskItem
@@ -23,34 +24,52 @@ public struct TaskDetailView: View {
         Form {
             Section("Title") {
                 Text(currentTask.title)
+                    .font(.dsBody)
+                    .foregroundStyle(Color.dsInk)
             }
+            .listRowBackground(Color.dsCard)
+
             if !currentTask.notes.isEmpty {
                 Section("Notes") {
                     Text(currentTask.notes)
+                        .font(.dsBody)
+                        .foregroundStyle(Color.dsInk2)
                 }
+                .listRowBackground(Color.dsCard)
             }
+
             Section("Status") {
                 Button {
                     Task { await toggle() }
                 } label: {
-                    Label(
-                        currentTask.isCompleted ? "Completed" : "Not Completed",
-                        systemImage: currentTask.isCompleted ? "checkmark.circle.fill" : "circle"
-                    )
-                    .foregroundStyle(currentTask.isCompleted ? .green : .primary)
+                    HStack(spacing: DSSpacing.md) {
+                        Image(systemName: currentTask.isCompleted ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(currentTask.isCompleted ? Color.dsAccent : Color.dsInk3)
+                        Text(currentTask.isCompleted ? "Completed" : "Not Completed")
+                            .font(.dsBody)
+                            .foregroundStyle(currentTask.isCompleted ? Color.dsAccent : Color.dsInk)
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
                 }
                 .disabled(isToggling)
             }
+            .listRowBackground(Color.dsCard)
+
             if let error = errorMessage {
                 Section {
-                    Text(error).foregroundStyle(.red)
+                    DSInlineError(error)
                 }
+                .listRowBackground(Color.dsCard)
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(Color.dsBackground.ignoresSafeArea())
         .navigationTitle("Task Detail")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .tint(.dsAccent)
     }
 
     @MainActor
