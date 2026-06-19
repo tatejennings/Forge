@@ -5,6 +5,8 @@ description: Use when working in a multi-module SPM workspace or Xcode project t
 
 # Forge Modular Architecture
 
+**First, confirm this project is actually Modular** (see the decision rule in the `using-forge` skill): there must be custom per-module containers, module-local `Inject` typealiases, `unimplemented()` proxies, or composition-root wiring. If the only registration site is `extension AppContainer { … }` with no custom containers, this is a **Simple** app — stop and use `using-forge` instead. Do not introduce the machinery below into a Simple app.
+
 The core rule: **feature modules never import other feature modules.** They import protocol modules. The app target is the only composition root — the only place that imports concrete modules and wires them together.
 
 ## Per-module container

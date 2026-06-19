@@ -1,3 +1,20 @@
+//
+//  AppContainer+DI.swift
+//
+//  MODULAR composition root.
+//
+//  ForgeDemo is a multi-module SPM app using Forge's *Modular* path. This file is
+//  the app target's composition root: it registers the app's live implementations
+//  on `AppContainer`, then `wireContainers()` injects them into the per-module
+//  feature containers (`TaskContainer`, `SettingsContainer`) that declare those
+//  dependencies as `unimplemented()` proxies.
+//
+//  This `AppContainer` extension looks like Forge's Simple path, but it is NOT —
+//  the `wireContainers()` step and the per-module containers it wires are what make
+//  this Modular. A Simple (single-target) app would have no feature containers, no
+//  `unimplemented()` proxies, and no `wireContainers()`. See ForgeDemo/README.md.
+//
+
 import Forge
 import CoreModels
 import CoreNetworking

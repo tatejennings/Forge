@@ -1,3 +1,8 @@
+// Per-module Forge container (Modular path). The local `Inject` typealias resolves
+// from this container; cross-module dependencies are declared as `unimplemented()`
+// proxies and wired by the app target's composition root (see ForgeDemo's
+// AppContainer+DI.swift). A Simple app would not have this file.
+
 import Forge
 import CoreModels
 

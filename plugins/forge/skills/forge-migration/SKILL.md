@@ -11,9 +11,9 @@ The migration playbook is the same regardless of source pattern, with small vari
 
 1. **Add Forge as a dependency.** SPM: add `https://github.com/tatejennings/Forge.git` to `Package.swift`.
 2. **Introduce protocols** for any concrete type that needs to be substitutable in tests or previews. If a type is already protocol-fronted, skip.
-3. **Choose a container layout:**
-   - Single target → extend `AppContainer`.
-   - Multi-module → one container per module + composition root in the app target (see `forge-modular`).
+3. **Choose a container layout** (apply the "Which path am I in?" rule in `using-forge`):
+   - Single target → Simple: extend `AppContainer`. Do not introduce `unimplemented()` or wiring.
+   - Multi-module → Modular: one container per module + composition root in the app target (see `forge-modular`). Note an `AppContainer` extension alone is not the Simple path — a Modular app extends it too, as its composition root.
 4. **Register dependencies** as computed properties on the container, using the right scope (see `using-forge`).
 5. **Replace injection sites** with `@Inject(\.x)`.
 6. **Backfill tests** to use `withOverrides` (see `forge-testing`).

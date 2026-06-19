@@ -29,37 +29,42 @@ Audit for each of the following anti-patterns. For each finding, classify severi
    - Detect: search per-module containers for `unimplemented("...")` calls. For each, verify there's a matching `override(\.x)` somewhere in the app target.
    - Why it matters: app crashes on launch when the property is first resolved.
 
+5. **`unimplemented()` or composition-root wiring in a Simple (single-`AppContainer`) app.**
+   - Detect: the project's only registration site is `extension AppContainer { … }` — no custom `Container` subclasses and no module-local `typealias Inject<T> = ContainerInject<…>` — yet a property uses `unimplemented(...)`, or there's a `wireContainers()`-style block of `XContainer.shared.override(\.x)` calls.
+   - Why it matters: `unimplemented()` and wiring are Modular-only. In a Simple app there is no other module to wire the proxy from, so an `unimplemented()` factory crashes at first resolution. Register the real implementation directly. (See the "Which path am I in?" rule in the `using-forge` skill.)
+
 ### MEDIUM — questionable choices
 
-5. **`.singleton` scope used for a per-screen ViewModel.**
+6. **`.singleton` scope used for a per-screen ViewModel.**
    - Pattern: `var loginViewModel: LoginViewModel { provide(.singleton) { ... } }`.
    - Why: ViewModels often hold screen-local state. `.singleton` means the state survives across navigations, often unintentionally. Likely should be `.transient` or `.cached`.
 
-6. **Missing protocol for a service that's injected elsewhere.**
+7. **Missing protocol for a service that's injected elsewhere.**
    - Pattern: a type is referenced from another module's `@Inject` (or another container's `provide` body), but has no corresponding protocol.
    - Why: makes mocking harder than necessary.
 
-7. **Feature module imports another feature module's implementation.**
+8. **Feature module imports another feature module's implementation.**
    - Pattern: `import FeatureX` inside `FeatureY`, where `FeatureX` is not a protocol module.
    - Why: violates the modular architecture rule. Should use a protocol module + `unimplemented` proxy + composition-root wiring.
 
-8. **`@Inject` used in a SwiftUI View.**
+9. **`@Inject` used in a SwiftUI View.**
    - Pattern: `@Inject(\.x)` declared inside a `struct ... : View`.
    - Why: `@Inject` uses `mutating get`, which doesn't compose with value-type Views. Should use `@State` with direct container resolution.
 
 ### LOW — style and minor improvements
 
-9. **Network/disk/external service registered without a `preview:` factory.**
+10. **Network/disk/external service registered without a `preview:` factory.**
    - Pattern: `provide(...) { URLSessionNetworkClient() }` without `preview:` — only an issue if the service is used in views that have `#Preview` blocks.
    - Suggest: add `preview: { MockNetworkClient() }`.
 
-10. **Inconsistent registration ordering.**
+11. **Inconsistent registration ordering.**
     - Style nit: properties should follow a consistent order (usually alphabetical) within a container.
 
 ## How to investigate
 
 1. Take the user's scope: a file, a directory, or "the whole package". If not specified, ask.
 2. Use `Glob` to enumerate Swift files in scope.
+   - **First, determine the path** (Simple vs Modular) using the "Which path am I in?" rule in the `using-forge` skill — it governs whether findings #3–#5 apply. A custom `Container` subclass, a module-local `Inject` typealias, `unimplemented()`, or composition-root wiring means Modular; an `AppContainer` extension alone does not.
 3. Use `Grep` to find:
    - `provide(` — all registration sites.
    - `unimplemented(` — cross-module proxies.

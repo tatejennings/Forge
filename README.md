@@ -45,6 +45,8 @@ Then add `Forge` to your target's dependencies:
 
 ## Quick Start
 
+> **Which setup should I use?** Use **Simple** for a single-target app — extend `AppContainer`, no container classes, no `unimplemented()`, no wiring. Use **Modular** for a multi-module SPM app — one container per module, cross-module `unimplemented()` proxies, and a composition root in the app target. The two are not interchangeable: `unimplemented()` and composition-root wiring belong **only** to the Modular path. The [ForgeDemo](ForgeDemo/) app is a complete Modular example.
+
 ### Simple Setup (zero config)
 
 Extend Forge's built-in `AppContainer` with your dependencies and inject them immediately — no container class, no typealias, no setup code:

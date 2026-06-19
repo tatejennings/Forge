@@ -9,11 +9,12 @@ Use the `using-forge` and `forge-modular` skills as the authoritative source for
 
 ## Steps
 
-1. **Inspect the project structure.**
+1. **Inspect the project structure.** Apply the "Which path am I in?" decision rule from the `using-forge` skill (the authoritative wording).
    - Look for `Package.swift`, `.xcodeproj`, or `.xcworkspace` at the working directory and one level down.
    - Count the number of `.target(...)` / library targets in any `Package.swift` files.
    - Single target → suggest `simple` setup unless the user passed `modular`.
    - Multiple targets / workspace → suggest `modular` unless the user passed `simple`.
+   - If Forge code already exists, detect from the code, not just the target count: any custom `Container` subclass, module-local `typealias Inject<T> = ContainerInject<…>`, `unimplemented()`, or composition-root wiring means Modular — an `AppContainer` extension alone does not.
 
 2. **If the setup style is still ambiguous, ask the user** (one question, multi-choice):
    - Simple — extend the built-in `AppContainer`. Best for single-target apps.

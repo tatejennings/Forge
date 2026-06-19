@@ -7,6 +7,15 @@ description: Use when reading, writing, or editing Swift code that imports Forge
 
 Forge is a compile-time-safe dependency injection framework for Swift. Registration is a computed property on a `Container` subclass; injection is a `@Inject(\.keyPath)` property wrapper.
 
+## Which path am I in? (decide this first)
+
+Forge projects follow one of two paths. **Detect the path from the code before writing any — don't guess from the target count alone.** This is the single source of truth for the decision; other skills and `AGENTS.md` mirror it.
+
+- **Modular** if ANY of these are present: a custom `final class XContainer: Container, SharedContainer`; a module-local `typealias Inject<T> = ContainerInject<XContainer, T>`; `unimplemented(...)` factories; or composition-root wiring (`XContainer.shared.override(\.y) { … }`). A Modular app *also* extends `AppContainer` (as its composition root holding the live implementations) — so **seeing an `AppContainer` extension does NOT mean Simple.**
+- **Simple** if the ONLY registration site is `extension AppContainer { … }`, injection uses Forge's built-in `@Inject(\.x)`, and there are **no** custom `Container` subclasses, **no** module-local `Inject` typealias, and **no** `unimplemented()`.
+- **Starting fresh?** Single target → Simple. Multi-module SPM → Modular.
+- **Never mix:** `unimplemented()` and composition-root wiring are **Modular-only**. In a Simple app, register the real implementation directly — never introduce a proxy or a `wireContainers()` step. For the full Modular pattern, see the `forge-modular` skill.
+
 ## Core rules (non-negotiable)
 
 1. **Always return a protocol type from `provide`.** Concrete return types cannot be overridden in tests or previews.
@@ -21,7 +30,7 @@ Forge is a compile-time-safe dependency injection framework for Swift. Registrat
    }
    ```
 
-2. **One container per module.** An `AuthContainer` registers auth dependencies, not analytics. For single-target apps, extend the built-in `AppContainer`.
+2. **One container per module.** An `AuthContainer` registers auth dependencies, not analytics. For single-target (Simple) apps, extend the built-in `AppContainer` instead — see "Which path am I in?" above.
 
 3. **Keep protocols narrow.** A `NetworkClientProtocol` does not also carry auth methods. Split concerns into separate protocols and separate registrations.
 
@@ -102,16 +111,18 @@ When to add a preview factory:
 
 Skip the preview factory for pure value-producing services that are safe to construct in a preview.
 
-## `unimplemented` — explicit contracts
+## `unimplemented` — explicit contracts (Modular-only)
 
-`unimplemented(_:)` returns a value that crashes immediately if resolved. Use it for dependencies that **must** be overridden:
+`unimplemented(_:)` returns a value that crashes immediately if resolved. It exists for **cross-module proxies** in the Modular path — dependencies a feature module declares but cannot construct, which the app target's composition root **must** wire at startup:
 ```swift
 var analytics: any AnalyticsProtocol {
     provide(.singleton) { unimplemented("analytics") } preview: { MockAnalytics() }
 }
 ```
 
-This is the right default for cross-module proxies (see `forge-modular` skill). It surfaces missing wiring as an immediate, clear crash instead of silent wrong behavior.
+It surfaces missing wiring as an immediate, clear crash instead of silent wrong behavior. See the `forge-modular` skill for the full pattern.
+
+**Do not use `unimplemented()` in a Simple (single-`AppContainer`) app.** There is no other module to wire it from — register the real implementation directly in your `AppContainer` extension.
 
 ## What Forge does NOT support
 

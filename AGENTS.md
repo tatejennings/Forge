@@ -27,6 +27,15 @@ final class LoginViewModel {
 }
 ```
 
+## Which path am I in? (decide this first)
+
+Forge projects follow one of two paths. **Detect the path from the code before writing any — don't guess from the target count alone.**
+
+- **Modular** if ANY of these are present: a custom `final class XContainer: Container, SharedContainer`; a module-local `typealias Inject<T> = ContainerInject<XContainer, T>`; `unimplemented(...)` factories; or composition-root wiring (`XContainer.shared.override(\.y) { … }`). A Modular app *also* extends `AppContainer` (as its composition root holding the live implementations) — so seeing an `AppContainer` extension does **not** mean Simple.
+- **Simple** if the ONLY registration site is `extension AppContainer { … }`, injection uses the built-in `@Inject(\.x)`, and there are **no** custom `Container` subclasses, **no** module-local `Inject` typealias, and **no** `unimplemented()`.
+- **Starting fresh?** Single target → Simple. Multi-module SPM → Modular (see "Modular apps" below).
+- **Never mix:** `unimplemented()` and composition-root wiring are **Modular-only**. In a Simple app, register the real implementation directly.
+
 ## Non-negotiable rules
 
 1. **Always return a protocol type from `provide`.** Concrete types cannot be overridden in tests or previews.
@@ -88,9 +97,9 @@ Reset helpers:
 - `resetCached()` — clears `.cached` values only.
 - `resetAll()` — clears all overrides AND all cached/singleton values.
 
-## `unimplemented` — explicit contracts
+## `unimplemented` — explicit contracts (Modular-only)
 
-`unimplemented(_:)` returns a value that crashes immediately if resolved. Use it for dependencies that MUST be overridden — most commonly cross-module proxies:
+`unimplemented(_:)` returns a value that crashes immediately if resolved. It exists for cross-module proxies in the Modular path — dependencies a feature module declares but cannot construct, which the app target wires at startup:
 
 ```swift
 // In FeatureSearch — analytics is wired by the app target
@@ -98,6 +107,8 @@ var analytics: any AnalyticsProtocol {
     provide(.singleton) { unimplemented("analytics") } preview: { MockAnalytics() }
 }
 ```
+
+**Do not use `unimplemented()` in a Simple (single-`AppContainer`) app** — there is no other module to wire it from. Register the real implementation directly.
 
 ## Modular apps
 
@@ -133,6 +144,7 @@ Protocols live in a small `*Protocols` module that everyone can import without p
 - **`.singleton` on a per-screen ViewModel** — state leaks across navigations. Use `.transient` or `.cached`.
 - **Direct `.shared.override` in tests** without cleanup — use `withOverrides`.
 - **Cross-module dep with `provide { Real() }` instead of `unimplemented`** — either won't compile, or silently runs the wrong code.
+- **`unimplemented()` or composition-root wiring in a Simple app** — these are Modular-only. In a single-`AppContainer` app, register the real implementation directly.
 - **`@Inject` in a SwiftUI View** — Views are value types; use `@State` + direct resolution.
 - **Feature module importing another feature module's implementation** — use protocol modules + cross-module proxies.
 
