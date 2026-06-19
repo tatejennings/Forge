@@ -18,6 +18,7 @@ struct TaskListViewModelTests {
         let mockState = MockAppState()
         container.override(\.taskService) { mockService as any TaskServiceProtocol }
         container.override(\.appState) { mockState as any AppStateProtocol }
+        container.override(\.logger) { MockLogger() as any LoggerProtocol }
 
         let vm = TaskListViewModel()
         await vm.loadTasks()
@@ -40,6 +41,7 @@ struct TaskListViewModelTests {
         let mockState = MockAppState()
         container.override(\.taskService) { mockService as any TaskServiceProtocol }
         container.override(\.appState) { mockState as any AppStateProtocol }
+        container.override(\.logger) { MockLogger() as any LoggerProtocol }
 
         let vm = TaskListViewModel()
         await vm.loadTasks()
@@ -67,6 +69,7 @@ struct TaskListViewModelTests {
         let mockState = MockAppState(count: 1)
         container.override(\.taskService) { mockService as any TaskServiceProtocol }
         container.override(\.appState) { mockState as any AppStateProtocol }
+        container.override(\.logger) { MockLogger() as any LoggerProtocol }
 
         let vm = TaskListViewModel()
         await vm.loadTasks()
@@ -87,6 +90,7 @@ struct TaskListViewModelTests {
         let mockState = MockAppState()
         container.override(\.taskService) { mockService as any TaskServiceProtocol }
         container.override(\.appState) { mockState as any AppStateProtocol }
+        container.override(\.logger) { MockLogger() as any LoggerProtocol }
 
         let vm = TaskListViewModel()
         await vm.refreshTasks()

@@ -3,26 +3,26 @@
 import PackageDescription
 
 let package = Package(
-    name: "CoreInfrastructure",
+    name: "CoreLogger",
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
-        .library(name: "CoreInfrastructure", targets: ["CoreInfrastructure"]),
+        .library(name: "CoreLogger", targets: ["CoreLogger"]),
     ],
     dependencies: [
         .package(path: "../CoreModels"),
-        .package(path: "../CoreNetworking"),
-        .package(path: "../CoreLogger"),
         .package(path: "../../../"),
     ],
     targets: [
         .target(
-            name: "CoreInfrastructure",
+            name: "CoreLogger",
             dependencies: [
                 "CoreModels",
-                "CoreNetworking",
-                "CoreLogger",
                 .product(name: "Forge", package: "Forge"),
             ]
+        ),
+        .testTarget(
+            name: "CoreLoggerTests",
+            dependencies: ["CoreLogger", "CoreModels"]
         ),
     ]
 )

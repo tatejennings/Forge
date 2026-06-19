@@ -15,6 +15,7 @@ struct AddTaskViewModelTests {
 
         let mockService = MockTaskService(tasks: [])
         container.override(\.taskService) { mockService as any TaskServiceProtocol }
+        container.override(\.logger) { MockLogger() as any LoggerProtocol }
 
         let vm = AddTaskViewModel()
         vm.title = "Write unit tests"
@@ -34,6 +35,7 @@ struct AddTaskViewModelTests {
 
         let mockService = MockTaskService(tasks: [])
         container.override(\.taskService) { mockService as any TaskServiceProtocol }
+        container.override(\.logger) { MockLogger() as any LoggerProtocol }
 
         let vm = AddTaskViewModel()
         vm.title = "   "

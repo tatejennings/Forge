@@ -31,6 +31,24 @@ public final class TaskContainer: Container, SharedContainer, @unchecked Sendabl
         }
     }
 
+    /// Cross-cutting logger, wired from CoreLogger by the composition root.
+    public var logger: any LoggerProtocol {
+        provide(.singleton) {
+            unimplemented("logger")
+        } preview: {
+            MockLogger()
+        }
+    }
+
+    /// Feature flags, wired from the FeatureFlags module by the composition root.
+    public var flagService: any FeatureFlagServiceProtocol {
+        provide(.singleton) {
+            unimplemented("flagService")
+        } preview: {
+            MockFeatureFlagService()
+        }
+    }
+
     // MARK: - Feature-owned dependencies
 
     public var taskListViewModel: TaskListViewModel {

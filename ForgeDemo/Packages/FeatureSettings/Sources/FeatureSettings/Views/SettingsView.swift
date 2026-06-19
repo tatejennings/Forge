@@ -21,6 +21,13 @@ public struct SettingsView: View {
                     }
                     .onChange(of: viewModel.sortOrder) { viewModel.saveSettings() }
                 }
+                Section("Advanced") {
+                    NavigationLink {
+                        FeatureFlagsView()
+                    } label: {
+                        Label("Feature Flags", systemImage: "flag")
+                    }
+                }
                 Section {
                     Button("Clear Completed Tasks", role: .destructive) {
                         Task { await viewModel.clearCompleted() }

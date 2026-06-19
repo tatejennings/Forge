@@ -1,0 +1,62 @@
+// =============================================================================================
+// REFERENCE ADAPTER — NOT COMPILED
+//
+// This file has a `.example` suffix so the build ignores it (no LaunchDarkly SDK required to
+// build the demo). It shows how to back the SAME `FeatureFlagServiceProtocol` with a remote
+// provider. Because the rest of the app depends only on the protocol, adopting LaunchDarkly is
+// three steps and touches nothing outside this module:
+//
+//   1. Add the SDK dependency in this package's Package.swift:
+//        .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", from: "9.0.0"),
+//      and add `.product(name: "LaunchDarkly", package: "ios-client-sdk")` to the target.
+//   2. Rename this file to `LaunchDarklyFeatureFlagService.swift` (drop the `.example`).
+//   3. Flip the one factory line in `FeatureFlagContainer.flagService`:
+//        provide(.singleton) { LaunchDarklyFeatureFlagService(mobileKey: "<your-mobile-key>") }
+//
+// No views, view models, or other modules change — that's the payoff of programming to the
+// protocol and resolving it through Forge.
+// =============================================================================================
+
+import Foundation
+import Observation
+import CoreModels
+import LaunchDarkly
+
+@Observable
+public final class LaunchDarklyFeatureFlagService: FeatureFlagServiceProtocol, @unchecked Sendable {
+    // Local overrides take precedence so the in-app toggles still work on top of remote values.
+    private var overrides: [FeatureFlag: Bool] = [:]
+    private var version = 0   // observed token; bumped whenever flags change (see below)
+
+    public init(mobileKey: String, context: LDContext? = nil) {
+        let config = LDConfig(mobileKey: mobileKey)
+        let ldContext = context ?? (try? LDContextBuilder(key: "anonymous").build().get())!
+        LDClient.start(config: config, context: ldContext)
+
+        // Re-render the UI whenever LaunchDarkly pushes new flag values.
+        for flag in FeatureFlag.allCases {
+            LDClient.get()?.observe(key: flag.rawValue, owner: self) { [weak self] _ in
+                self?.version &+= 1
+            }
+        }
+    }
+
+    public func isEnabled(_ flag: FeatureFlag) -> Bool {
+        _ = version
+        if let override = overrides[flag] { return override }
+        return LDClient.get()?.boolVariation(forKey: flag.rawValue, defaultValue: flag.defaultValue)
+            ?? flag.defaultValue
+    }
+
+    public func setEnabled(_ flag: FeatureFlag, _ enabled: Bool) {
+        overrides[flag] = enabled
+        version &+= 1
+    }
+
+    public func refresh() async {
+        await withCheckedContinuation { continuation in
+            LDClient.get()?.flush()
+            continuation.resume()
+        }
+    }
+}

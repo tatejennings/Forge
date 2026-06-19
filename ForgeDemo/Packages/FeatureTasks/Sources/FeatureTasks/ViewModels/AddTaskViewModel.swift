@@ -6,6 +6,8 @@ import CoreModels
 public final class AddTaskViewModel {
     @ObservationIgnored
     @Inject(\.taskService) private var taskService
+    @ObservationIgnored
+    @Inject(\.logger) private var logger
 
     public var title: String = ""
     public var notes: String = ""
@@ -24,8 +26,11 @@ public final class AddTaskViewModel {
         isSubmitting = true
         defer { isSubmitting = false }
         do {
-            return try await taskService.addTask(title: title, notes: notes)
+            let task = try await taskService.addTask(title: title, notes: notes)
+            logger.info("Submitted new task \(task.id)")
+            return task
         } catch {
+            logger.error("addTask failed: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             return nil
         }

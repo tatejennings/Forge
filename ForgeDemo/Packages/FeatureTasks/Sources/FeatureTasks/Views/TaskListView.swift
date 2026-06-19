@@ -4,50 +4,79 @@ import CoreModels
 public struct TaskListView: View {
     @State private var viewModel = TaskContainer.shared.taskListViewModel
     @State private var appState = TaskContainer.shared.appState
+    @State private var flags = TaskContainer.shared.flagService
 
     @State private var showingAddTask = false
+    /// Tasks awaiting delete confirmation (only used when `.confirmBeforeDelete` is on).
+    @State private var pendingDeleteIDs: [UUID] = []
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView("Loading tasks…")
-                } else {
-                    taskList
-                }
-            }
-            .navigationTitle("ForgeDemo")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddTask = true
-                    } label: {
-                        Image(systemName: "plus")
+            content
+                .navigationTitle("ForgeDemo")
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showingAddTask = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                    }
+                    ToolbarItem(placement: .secondaryAction) {
+                        filterPicker
                     }
                 }
-                ToolbarItem(placement: .secondaryAction) {
-                    filterPicker
+                .sheet(isPresented: $showingAddTask) {
+                    AddTaskSheet {
+                        Task { await viewModel.loadTasks() }
+                    }
                 }
-            }
-            .sheet(isPresented: $showingAddTask) {
-                AddTaskSheet {
-                    Task { await viewModel.loadTasks() }
+                .task {
+                    guard viewModel.tasks.isEmpty else { return }
+                    await viewModel.loadTasks()
                 }
-            }
-            .task {
-                guard viewModel.tasks.isEmpty else { return }
-                await viewModel.loadTasks()
-            }
-            .refreshable {
-                await viewModel.refreshTasks()
-            }
-            .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                Text(viewModel.errorMessage ?? "")
-            }
+                .confirmationDialog(
+                    "Delete \(pendingDeleteIDs.count > 1 ? "Tasks" : "Task")?",
+                    isPresented: Binding(
+                        get: { !pendingDeleteIDs.isEmpty },
+                        set: { if !$0 { pendingDeleteIDs = [] } }
+                    ),
+                    titleVisibility: .visible
+                ) {
+                    Button("Delete", role: .destructive) {
+                        let ids = pendingDeleteIDs
+                        pendingDeleteIDs = []
+                        for id in ids { Task { await viewModel.deleteTask(id: id) } }
+                    }
+                    Button("Cancel", role: .cancel) { pendingDeleteIDs = [] }
+                }
+                .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+                    Button("OK") { viewModel.errorMessage = nil }
+                } message: {
+                    Text(viewModel.errorMessage ?? "")
+                }
+        }
+    }
+
+    // Pull-to-refresh is gated behind the `.pullToRefresh` flag, so the gesture disappears
+    // entirely when the flag is off (rather than just no-op'ing).
+    @ViewBuilder
+    private var content: some View {
+        if flags.isEnabled(.pullToRefresh) {
+            mainContent.refreshable { await viewModel.refreshTasks() }
+        } else {
+            mainContent
+        }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        if viewModel.isLoading {
+            ProgressView("Loading tasks…")
+        } else {
+            taskList
         }
     }
 
@@ -67,15 +96,19 @@ public struct TaskListView: View {
                             viewModel.updateTask(updated)
                         }
                     } label: {
-                        TaskRowView(task: task) {
+                        TaskRowView(task: task, showNotes: flags.isEnabled(.showNotesInList)) {
                             Task { await viewModel.toggleTask(id: task.id) }
                         }
                     }
                 }
                 .onDelete { indexSet in
                     let ids = indexSet.map { viewModel.filteredTasks[$0].id }
-                    for id in ids {
-                        Task { await viewModel.deleteTask(id: id) }
+                    if flags.isEnabled(.confirmBeforeDelete) {
+                        pendingDeleteIDs = ids
+                    } else {
+                        for id in ids {
+                            Task { await viewModel.deleteTask(id: id) }
+                        }
                     }
                 }
             }

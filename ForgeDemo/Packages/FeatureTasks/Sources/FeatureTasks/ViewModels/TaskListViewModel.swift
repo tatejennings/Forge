@@ -8,6 +8,8 @@ public final class TaskListViewModel {
     @Inject(\.taskService) private var taskService
     @ObservationIgnored
     @Inject(\.appState) private var appState
+    @ObservationIgnored
+    @Inject(\.logger) private var logger
 
     public var tasks: [TaskItem] = []
     public var isLoading: Bool = false
@@ -32,6 +34,7 @@ public final class TaskListViewModel {
             tasks = try await taskService.loadTasks()
             syncBadgeCount()
         } catch {
+            logger.error("loadTasks failed: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
     }
@@ -64,11 +67,13 @@ public final class TaskListViewModel {
 
     @MainActor
     public func deleteTask(id: UUID) async {
+        logger.info("User requested delete of task \(id)")
         do {
             try await taskService.deleteTask(id: id)
             tasks.removeAll { $0.id == id }
             syncBadgeCount()
         } catch {
+            logger.error("deleteTask failed: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
     }

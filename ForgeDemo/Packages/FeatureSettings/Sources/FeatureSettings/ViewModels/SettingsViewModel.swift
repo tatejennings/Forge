@@ -7,6 +7,8 @@ public final class SettingsViewModel {
     @Inject(\.appState) private var appState
     @ObservationIgnored
     @Inject(\.taskService) private var taskService
+    @ObservationIgnored
+    @Inject(\.logger) private var logger
 
     public var displayName: String = ""
     public var sortOrder: SortOrder = .newestFirst
@@ -34,11 +36,14 @@ public final class SettingsViewModel {
         defer { isClearingCompleted = false }
         do {
             let tasks = try await taskService.loadTasks()
-            for task in tasks where task.isCompleted {
+            let completed = tasks.filter(\.isCompleted)
+            for task in completed {
                 try await taskService.deleteTask(id: task.id)
             }
+            logger.info("Cleared \(completed.count) completed tasks")
             onCompletedCleared?()
         } catch {
+            logger.error("clearCompleted failed: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
     }

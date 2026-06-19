@@ -3,6 +3,8 @@ import CoreModels
 
 struct TaskRowView: View {
     let task: TaskItem
+    /// Driven by the `.showNotesInList` feature flag.
+    var showNotes: Bool = true
     var onToggle: () -> Void
 
     var body: some View {
@@ -20,7 +22,7 @@ struct TaskRowView: View {
                     .strikethrough(task.isCompleted)
                     .foregroundStyle(task.isCompleted ? .secondary : .primary)
 
-                if !task.notes.isEmpty {
+                if showNotes && !task.notes.isEmpty {
                     Text(task.notes)
                         .font(.caption)
                         .foregroundStyle(.secondary)

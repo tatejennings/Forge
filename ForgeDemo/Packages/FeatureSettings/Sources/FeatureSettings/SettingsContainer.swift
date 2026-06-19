@@ -29,7 +29,29 @@ public final class SettingsContainer: Container, SharedContainer, @unchecked Sen
         }
     }
 
+    /// Cross-cutting logger, wired from CoreLogger by the composition root.
+    public var logger: any LoggerProtocol {
+        provide(.singleton) {
+            unimplemented("logger")
+        } preview: {
+            MockLogger()
+        }
+    }
+
+    /// Feature flags, wired from the FeatureFlags module by the composition root.
+    public var flagService: any FeatureFlagServiceProtocol {
+        provide(.singleton) {
+            unimplemented("flagService")
+        } preview: {
+            MockFeatureFlagService()
+        }
+    }
+
     public var settingsViewModel: SettingsViewModel {
         provide(.cached) { SettingsViewModel() }
+    }
+
+    public var featureFlagsViewModel: FeatureFlagsViewModel {
+        provide(.cached) { FeatureFlagsViewModel() }
     }
 }

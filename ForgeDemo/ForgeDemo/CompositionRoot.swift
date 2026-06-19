@@ -14,6 +14,8 @@
 
 import Forge
 import CoreInfrastructure
+import CoreLogger
+import FeatureFlags
 import FeatureTasks
 import FeatureSettings
 
@@ -38,11 +40,17 @@ func wireContainers() {
     // override closures.
     let taskService = infra.taskService
     let appState = infra.appState
+    let logger = LoggerContainer.shared.logger
+    let flagService = FeatureFlagContainer.shared.flagService
 
     // Point each feature container's `unimplemented()` proxy at the real service.
     TaskContainer.shared.override(\.taskService) { taskService }
     TaskContainer.shared.override(\.appState)    { appState }
+    TaskContainer.shared.override(\.logger)      { logger }
+    TaskContainer.shared.override(\.flagService) { flagService }
 
     SettingsContainer.shared.override(\.taskService) { taskService }
     SettingsContainer.shared.override(\.appState)    { appState }
+    SettingsContainer.shared.override(\.logger)      { logger }
+    SettingsContainer.shared.override(\.flagService) { flagService }
 }

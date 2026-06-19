@@ -1,6 +1,7 @@
 import Forge
 import CoreModels
 import CoreNetworking
+import CoreLogger
 
 // Per-module Forge container (Modular path). CoreInfrastructure owns persistence
 // and the app's domain services. It depends on CoreNetworking (an allowed downward
@@ -26,7 +27,8 @@ public final class InfrastructureContainer: Container, SharedContainer, @uncheck
         provide(.singleton) {
             TaskService(
                 repository: self.taskRepository,
-                remoteService: NetworkingContainer.shared.remoteTaskService
+                remoteService: NetworkingContainer.shared.remoteTaskService,
+                logger: LoggerContainer.shared.logger
             )
         } preview: {
             MockTaskService()
@@ -36,7 +38,7 @@ public final class InfrastructureContainer: Container, SharedContainer, @uncheck
     /// Wired into the feature modules by the app's composition root.
     public var appState: any AppStateProtocol {
         provide(.singleton) {
-            AppStateService()
+            AppStateService(logger: LoggerContainer.shared.logger)
         } preview: {
             MockAppState(displayName: "Preview User")
         }

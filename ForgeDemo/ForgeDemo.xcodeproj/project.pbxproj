@@ -14,6 +14,8 @@
 		5DEA76272F774DEB003946FE /* CoreNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76262F774DEB003946FE /* CoreNetworking */; };
 		5DEA76292F774DEB003946FE /* FeatureSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA76282F774DEB003946FE /* FeatureSettings */; };
 		5DEA762B2F774DEB003946FE /* FeatureTasks in Frameworks */ = {isa = PBXBuildFile; productRef = 5DEA762A2F774DEB003946FE /* FeatureTasks */; };
+		5DAA00010000000000000001 /* CoreLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 5DAA00010000000000000002 /* CoreLogger */; };
+		5DAA00010000000000000004 /* FeatureFlags in Frameworks */ = {isa = PBXBuildFile; productRef = 5DAA00010000000000000005 /* FeatureFlags */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,6 +41,8 @@
 		5D479BB72FE5BE9B00872076 /* CoreNetworking */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CoreNetworking; sourceTree = "<group>"; };
 		5D479BB82FE5BE9B00872076 /* FeatureSettings */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FeatureSettings; sourceTree = "<group>"; };
 		5D479BB92FE5BE9B00872076 /* FeatureTasks */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FeatureTasks; sourceTree = "<group>"; };
+		5DAA00010000000000000003 /* CoreLogger */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CoreLogger; sourceTree = "<group>"; };
+		5DAA00010000000000000006 /* FeatureFlags */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = FeatureFlags; sourceTree = "<group>"; };
 		5DEA75EE2F772A53003946FE /* ForgeDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForgeDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA75FD2F772A54003946FE /* ForgeDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5DEA76072F772A55003946FE /* ForgeDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForgeDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -71,6 +75,8 @@
 				5DEA76252F774DEB003946FE /* CoreModels in Frameworks */,
 				5DEA76292F774DEB003946FE /* FeatureSettings in Frameworks */,
 				5DEA76232F774DEB003946FE /* CoreInfrastructure in Frameworks */,
+				5DAA00010000000000000001 /* CoreLogger in Frameworks */,
+				5DAA00010000000000000004 /* FeatureFlags in Frameworks */,
 				5DEA761C2F772AB1003946FE /* Forge in Frameworks */,
 				5D15CCE12FD621EA009C3E78 /* Forge in Frameworks */,
 				5DEA76272F774DEB003946FE /* CoreNetworking in Frameworks */,
@@ -98,8 +104,10 @@
 			isa = PBXGroup;
 			children = (
 				5D479BB52FE5BE9B00872076 /* CoreInfrastructure */,
+				5DAA00010000000000000003 /* CoreLogger */,
 				5D479BB62FE5BE9B00872076 /* CoreModels */,
 				5D479BB72FE5BE9B00872076 /* CoreNetworking */,
+				5DAA00010000000000000006 /* FeatureFlags */,
 				5D479BB82FE5BE9B00872076 /* FeatureSettings */,
 				5D479BB92FE5BE9B00872076 /* FeatureTasks */,
 			);
@@ -149,8 +157,10 @@
 			packageProductDependencies = (
 				5DEA761B2F772AB1003946FE /* Forge */,
 				5DEA76222F774DEB003946FE /* CoreInfrastructure */,
+				5DAA00010000000000000002 /* CoreLogger */,
 				5DEA76242F774DEB003946FE /* CoreModels */,
 				5DEA76262F774DEB003946FE /* CoreNetworking */,
+				5DAA00010000000000000005 /* FeatureFlags */,
 				5DEA76282F774DEB003946FE /* FeatureSettings */,
 				5DEA762A2F774DEB003946FE /* FeatureTasks */,
 				5D15CCE02FD621EA009C3E78 /* Forge */,
@@ -651,6 +661,14 @@
 		5DEA762A2F774DEB003946FE /* FeatureTasks */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FeatureTasks;
+		};
+		5DAA00010000000000000002 /* CoreLogger */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CoreLogger;
+		};
+		5DAA00010000000000000005 /* FeatureFlags */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FeatureFlags;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
